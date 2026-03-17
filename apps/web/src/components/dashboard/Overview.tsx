@@ -19,6 +19,7 @@ import {
 } from '@servicecore/shared';
 import { MetricCard } from '../shared/MetricCard';
 import { TeamFeed } from './TeamFeed';
+import { PayrollReportButton } from '../features/reports/PayrollReportButton';
 
 export function Overview() {
   const dateRange = useAppStore((s) => s.dateRange);
@@ -114,6 +115,11 @@ export function Overview() {
 
   return (
     <div className="space-y-6">
+      {/* Toolbar */}
+      <div className="flex justify-end">
+        <PayrollReportButton />
+      </div>
+
       {/* Metric cards grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricCard
