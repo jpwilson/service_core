@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "ServiceCore",
+    "slug": "servicecore",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "servicecore",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.servicecore.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0a1f44"
+      },
+      "package": "com.servicecore.mobile"
+    },
+    "plugins": ["expo-router"]
+  }
+}
