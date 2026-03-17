@@ -9,9 +9,8 @@ import {
   Save,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { mockEmployees } from '../../data/mockEmployees';
-import { formatCurrency } from '../../utils/formatters';
-import type { PayPeriodType } from '../../types';
+import type { PayPeriodType } from '@servicecore/shared';
+import { mockEmployees, formatCurrency } from '@servicecore/shared';
 
 export function Settings() {
   const { settings, updateSettings, addToast } = useAppStore();

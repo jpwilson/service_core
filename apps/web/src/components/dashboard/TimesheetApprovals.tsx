@@ -1,12 +1,16 @@
 import { useState, useMemo } from 'react';
 import { FileCheck, CheckCircle, XCircle, CheckCheck } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { mockEmployees } from '../../data/mockEmployees';
-import { mockTimeEntries } from '../../data/mockTimeEntries';
-import { mockProjects } from '../../data/mockProjects';
-import { formatShortDate, formatHoursMinutes, getInitials } from '../../utils/formatters';
-import { calculateHoursWorked } from '../../utils/calculations';
-import type { TimeEntry, TimeEntryFlag } from '../../types';
+import type { TimeEntry, TimeEntryFlag } from '@servicecore/shared';
+import {
+  mockEmployees,
+  mockTimeEntries,
+  mockProjects,
+  formatShortDate,
+  formatHoursMinutes,
+  getInitials,
+  calculateHoursWorked,
+} from '@servicecore/shared';
 
 const FLAG_STYLES: Record<TimeEntryFlag, { bg: string; text: string; label: string }> = {
   overtime: { bg: 'bg-amber-100', text: 'text-amber-800', label: 'Overtime' },

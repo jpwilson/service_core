@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import { Activity, MapPin, Inbox } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { mockActivityEvents } from '../../data/mockTimeEntries';
-import { mockEmployees } from '../../data/mockEmployees';
-import type { Employee, ActivityEvent } from '../../types';
+import type { Employee, ActivityEvent } from '@servicecore/shared';
+import { mockActivityEvents, mockEmployees } from '@servicecore/shared';
 
 const actionTextMap: Record<ActivityEvent['type'], string> = {
   clock_in: 'clocked in',

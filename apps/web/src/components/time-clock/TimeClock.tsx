@@ -8,9 +8,7 @@ import {
   User,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { mockEmployees } from '../../data/mockEmployees';
-import { mockTimeEntries } from '../../data/mockTimeEntries';
-import { getCurrentShiftEntry, getEntriesForEmployee } from '../../data/generators';
+import { mockEmployees, mockTimeEntries, getCurrentShiftEntry, getEntriesForEmployee } from '@servicecore/shared';
 import SimpleMode from './SimpleMode';
 import AdvancedMode from './AdvancedMode';
 

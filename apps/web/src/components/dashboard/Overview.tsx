@@ -9,15 +9,15 @@ import {
 } from 'lucide-react';
 import { isToday, parseISO } from 'date-fns';
 import { useAppStore } from '../../store/useAppStore';
-import { mockEmployees } from '../../data/mockEmployees';
-import { mockTimeEntries } from '../../data/mockTimeEntries';
-import { MetricCard } from '../shared/MetricCard';
-import { formatCurrency } from '../../utils/formatters';
 import {
+  mockEmployees,
+  mockTimeEntries,
+  formatCurrency,
   calculateHoursWorked,
   calculateOvertimeHours,
   calculatePayroll,
-} from '../../utils/calculations';
+} from '@servicecore/shared';
+import { MetricCard } from '../shared/MetricCard';
 import { TeamFeed } from './TeamFeed';
 
 export function Overview() {

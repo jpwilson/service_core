@@ -19,10 +19,8 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from 'recharts';
-import type { Employee, TimeEntry, BreakType } from '../../types';
-import { formatHoursMinutes } from '../../utils/formatters';
-import { calculateHoursWorked, getWeeklyHours } from '../../utils/calculations';
-import { mockProjects } from '../../data/mockProjects';
+import type { Employee, TimeEntry, BreakType } from '@servicecore/shared';
+import { formatHoursMinutes, calculateHoursWorked, getWeeklyHours, mockProjects } from '@servicecore/shared';
 import { startOfWeek, parseISO, format } from 'date-fns';
 
 interface AdvancedModeProps {

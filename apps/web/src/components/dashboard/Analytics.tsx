@@ -28,13 +28,17 @@ import {
   ChevronUp,
   ArrowUpDown,
 } from 'lucide-react';
-import { mockEmployees } from '../../data/mockEmployees';
-import { mockTimeEntries } from '../../data/mockTimeEntries';
-import { mockProjects } from '../../data/mockProjects';
+import type { Employee, Project, Department } from '@servicecore/shared';
+import {
+  mockEmployees,
+  mockTimeEntries,
+  mockProjects,
+  formatCurrency,
+  formatHoursMinutes,
+  formatShortDate,
+  calculateHoursWorked,
+} from '@servicecore/shared';
 import { ChartCard } from '../shared/ChartCard';
-import { formatCurrency, formatHoursMinutes, formatShortDate } from '../../utils/formatters';
-import { calculateHoursWorked } from '../../utils/calculations';
-import type { Employee, Project, Department } from '../../types';
 import {
   format,
   parseISO,

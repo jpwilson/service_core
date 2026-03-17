@@ -1,17 +1,17 @@
 import { useMemo } from 'react';
 import { X, Clock, TrendingUp, AlertTriangle, DollarSign } from 'lucide-react';
-import { mockEmployees } from '../../data/mockEmployees';
-import { mockTimeEntries } from '../../data/mockTimeEntries';
-import { mockProjects } from '../../data/mockProjects';
+import type { TimesheetStatus } from '@servicecore/shared';
 import {
+  mockEmployees,
+  mockTimeEntries,
+  mockProjects,
   formatShortDate,
   formatTime,
   formatHoursMinutes,
   formatCurrency,
   getInitials,
-} from '../../utils/formatters';
-import { calculateHoursWorked } from '../../utils/calculations';
-import type { TimesheetStatus } from '../../types';
+  calculateHoursWorked,
+} from '@servicecore/shared';
 
 interface EmployeeDetailProps {
   employeeId: string;

@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Timer, TimerOff, MapPin } from 'lucide-react';
-import type { Employee, TimeEntry } from '../../types';
-import { formatHoursMinutes } from '../../utils/formatters';
-import { calculateHoursWorked } from '../../utils/calculations';
+import type { Employee, TimeEntry } from '@servicecore/shared';
+import { formatHoursMinutes, calculateHoursWorked } from '@servicecore/shared';
 
 interface SimpleModeProps {
   employee: Employee;

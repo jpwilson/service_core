@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { subDays } from 'date-fns';
-import type { DateRange, AppSettings, TimesheetStatus } from '../types';
+import type { DateRange, AppSettings, TimesheetStatus } from '@servicecore/shared';
 
 interface Toast {
   id: string;
