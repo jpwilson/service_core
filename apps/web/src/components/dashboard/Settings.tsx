@@ -11,6 +11,8 @@ import {
 import { useAppStore } from '../../store/useAppStore';
 import type { PayPeriodType } from '@servicecore/shared';
 import { mockEmployees, formatCurrency } from '@servicecore/shared';
+import { ExcelActions } from '../features/import-export/ExcelActions';
+import { PayrollReportButton } from '../features/reports/PayrollReportButton';
 
 export function Settings() {
   const { settings, updateSettings, addToast } = useAppStore();
@@ -236,10 +238,13 @@ export function Settings() {
         <p className="mt-2 text-xs text-gray-400">Rate editing available in a future release.</p>
       </SectionCard>
 
-      {/* Export Options */}
+      {/* Excel Import / Export */}
+      <ExcelActions />
+
+      {/* Other Export Options */}
       <SectionCard
         icon={<Download className="w-5 h-5 text-[#f89020]" />}
-        title="Export Options"
+        title="Other Export Options"
       >
         <div className="flex flex-wrap gap-3">
           <button
@@ -256,13 +261,7 @@ export function Settings() {
             <Download className="w-4 h-4" />
             QuickBooks Format
           </button>
-          <button
-            onClick={() => handleExport('PDF Report')}
-            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-[#0a1f44] bg-white border border-gray-200 hover:border-[#f89020] hover:text-[#f89020] rounded-lg transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            PDF Report
-          </button>
+          <PayrollReportButton />
         </div>
       </SectionCard>
     </div>
