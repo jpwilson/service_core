@@ -2,8 +2,6 @@ import {
   subDays,
   addHours,
   addMinutes,
-  getDay,
-  format,
   isWeekend,
   startOfDay,
 } from 'date-fns';
@@ -136,10 +134,8 @@ const MAX_PENDING = 8;
 
 for (let dayOffset = DAYS_TO_GENERATE; dayOffset >= 0; dayOffset--) {
   const date = subDays(TODAY, dayOffset);
-  const dayOfWeek = getDay(date); // 0=Sun, 6=Sat
   const isWeekendDay = isWeekend(date);
   const isRecent = dayOffset <= 3;
-  const dateStr = format(date, 'yyyy-MM-dd');
 
   for (const employee of mockEmployees) {
     const pattern = employeePatterns[employee.id];

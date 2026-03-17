@@ -14,7 +14,7 @@ interface SimpleModeProps {
 }
 
 export default function SimpleMode({
-  employee,
+  employee: _employee,
   currentEntry,
   onClockIn,
   onClockOut,

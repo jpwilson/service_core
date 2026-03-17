@@ -20,10 +20,10 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import type { Employee, TimeEntry, BreakType } from '../../types';
-import { formatHoursMinutes, formatTime, formatDate } from '../../utils/formatters';
+import { formatHoursMinutes } from '../../utils/formatters';
 import { calculateHoursWorked, getWeeklyHours } from '../../utils/calculations';
 import { mockProjects } from '../../data/mockProjects';
-import { startOfWeek, parseISO, format, subDays } from 'date-fns';
+import { startOfWeek, parseISO, format } from 'date-fns';
 
 interface AdvancedModeProps {
   employee: Employee;
@@ -36,7 +36,7 @@ interface AdvancedModeProps {
 }
 
 export default function AdvancedMode({
-  employee,
+  employee: _employee,
   currentEntry,
   onClockIn,
   onClockOut,
@@ -399,7 +399,7 @@ export default function AdvancedMode({
                   borderRadius: 8,
                   border: '1px solid #e5e7eb',
                 }}
-                formatter={(value: number) => [`${value.toFixed(1)}h`, 'Hours']}
+                formatter={(value) => [`${Number(value).toFixed(1)}h`, 'Hours']}
               />
               <ReferenceLine
                 y={8}
