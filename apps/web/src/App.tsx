@@ -6,6 +6,7 @@ import { Analytics } from './components/dashboard/Analytics';
 import { TimesheetApprovals } from './components/dashboard/TimesheetApprovals';
 import { EmployeeDetail } from './components/dashboard/EmployeeDetail';
 import { Settings } from './components/dashboard/Settings';
+import { Import } from './components/dashboard/Import';
 import { DateRangePicker } from './components/shared/DateRangePicker';
 import {
   LayoutDashboard,
@@ -13,6 +14,7 @@ import {
   BarChart3,
   FileCheck,
   Settings as SettingsIcon,
+  Upload,
   Wrench,
   Bell,
   ChevronLeft,
@@ -43,6 +45,7 @@ function App() {
     { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
     { id: 'hours' as const, label: 'Analytics', icon: BarChart3 },
     { id: 'approvals' as const, label: 'Approvals', icon: FileCheck },
+    { id: 'import' as const, label: 'Import', icon: Upload },
     { id: 'settings' as const, label: 'Settings', icon: SettingsIcon },
   ];
 
@@ -67,6 +70,8 @@ function App() {
         return <Analytics />;
       case 'approvals' as string:
         return <TimesheetApprovals />;
+      case 'import' as string:
+        return <Import />;
       case 'settings' as string:
         return <Settings />;
       default:

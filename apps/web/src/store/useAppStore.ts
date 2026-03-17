@@ -13,7 +13,7 @@ interface AppState {
   timeClockMode: 'simple' | 'advanced';
   currentEmployeeId: string;
   selectedEmployeeId: string | null;
-  dashboardTab: 'overview' | 'hours' | 'attendance' | 'labor-cost' | 'projects' | 'employees';
+  dashboardTab: 'overview' | 'hours' | 'attendance' | 'labor-cost' | 'projects' | 'employees' | 'import';
   dateRange: DateRange;
   settings: AppSettings;
   timesheetApprovals: Map<string, TimesheetStatus>;
