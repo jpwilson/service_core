@@ -30,7 +30,9 @@ function pick<T>(arr: T[]): T {
 }
 
 // ---------- Constants ----------
-const TODAY = new Date('2026-03-16T12:00:00');
+// Use current date so dashboard metrics (isToday, active employees) always work
+const now = new Date();
+const TODAY = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
 const DAYS_TO_GENERATE = 30;
 const projectIds = mockProjects.map((p) => p.id);
 

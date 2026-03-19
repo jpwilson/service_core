@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { format } from 'date-fns';
 import {
   Upload,
   Download,
@@ -11,6 +12,9 @@ import {
   Plus,
   RotateCcw,
   AlertCircle,
+  History,
+  CheckCircle,
+  Clock,
 } from 'lucide-react';
 import Tesseract from 'tesseract.js';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -32,6 +36,51 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 type ImportMode = 'idle' | 'excel-preview' | 'csv-preview' | 'ocr-processing' | 'ocr-results';
+
+interface ImportRecord {
+  id: string;
+  fileName: string;
+  fileType: 'excel' | 'csv' | 'pdf' | 'image';
+  entriesImported: number;
+  importedAt: Date;
+  employees: string[];
+  totalHours: number;
+  dateRange: string;
+}
+
+// Seed with some demo history
+const INITIAL_HISTORY: ImportRecord[] = [
+  {
+    id: 'imp-demo-1',
+    fileName: 'kronos-export-march-wk1.csv',
+    fileType: 'csv',
+    entriesImported: 42,
+    importedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    employees: ['Marcus Trujillo', 'Jake Sandoval', 'Tyler Montoya', 'Brian Kessler', 'Carlos Vigil'],
+    totalHours: 336,
+    dateRange: 'Mar 3 - Mar 9',
+  },
+  {
+    id: 'imp-demo-2',
+    fileName: 'timesheet-scan-feb.pdf',
+    fileType: 'pdf',
+    entriesImported: 15,
+    importedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    employees: ['Miguel Archuleta', 'Jordan Pacheco', 'Ryan Baca'],
+    totalHours: 120,
+    dateRange: 'Feb 24 - Feb 28',
+  },
+  {
+    id: 'imp-demo-3',
+    fileName: 'payroll-feb-final.xlsx',
+    fileType: 'excel',
+    entriesImported: 86,
+    importedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+    employees: ['All employees (18)'],
+    totalHours: 688,
+    dateRange: 'Feb 17 - Feb 28',
+  },
+];
 
 interface CsvRow {
   employeeName: string;
@@ -132,6 +181,7 @@ export function Import() {
   // Shared state
   const [mode, setMode] = useState<ImportMode>('idle');
   const [fileName, setFileName] = useState('');
+  const [importHistory, setImportHistory] = useState<ImportRecord[]>(INITIAL_HISTORY);
 
   // Excel state
   const [excelRows, setExcelRows] = useState<ParsedTimesheetRow[] | null>(null);
@@ -414,7 +464,19 @@ export function Import() {
             <button onClick={resetAll} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-gray-300">
               <X className="w-3.5 h-3.5" /> Cancel
             </button>
-            <button onClick={() => { addToast(`${excelRows.length} entries imported from Excel`, 'success'); resetAll(); }}
+            <button onClick={() => {
+                const uniqueNames = [...new Set(excelRows.map(r => r.employeeName).filter(Boolean))];
+                const totalHrs = excelRows.reduce((sum, r) => sum + (r.hoursWorked || 0), 0);
+                const dates = excelRows.map(r => r.date).filter(Boolean).sort();
+                setImportHistory(prev => [{
+                  id: `imp-${Date.now()}`, fileName, fileType: 'excel',
+                  entriesImported: excelRows.length, importedAt: new Date(),
+                  employees: uniqueNames.length > 5 ? [`All employees (${uniqueNames.length})`] : uniqueNames,
+                  totalHours: Math.round(totalHrs),
+                  dateRange: dates.length ? `${dates[0]} - ${dates[dates.length - 1]}` : 'N/A',
+                }, ...prev]);
+                addToast(`${excelRows.length} entries imported from Excel`, 'success'); resetAll();
+              }}
               className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-white bg-primary-500 rounded-lg hover:bg-primary-600">
               <Check className="w-3.5 h-3.5" /> Import {excelRows.length} Entries
             </button>
@@ -479,7 +541,19 @@ export function Import() {
             <button onClick={resetAll} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-gray-300">
               <X className="w-3.5 h-3.5" /> Cancel
             </button>
-            <button onClick={() => { addToast(`${csvRows.length} entries imported`, 'success'); resetAll(); }}
+            <button onClick={() => {
+                const uniqueNames = [...new Set(csvRows.map(r => r.employeeName).filter(Boolean))];
+                const totalHrs = csvRows.reduce((sum, r) => sum + (parseFloat(r.hours) || 0), 0);
+                const dates = csvRows.map(r => r.date).filter(Boolean).sort();
+                setImportHistory(prev => [{
+                  id: `imp-${Date.now()}`, fileName, fileType: 'csv',
+                  entriesImported: csvRows.length, importedAt: new Date(),
+                  employees: uniqueNames.length > 5 ? [`All employees (${uniqueNames.length})`] : uniqueNames,
+                  totalHours: Math.round(totalHrs),
+                  dateRange: dates.length ? `${dates[0]} - ${dates[dates.length - 1]}` : 'N/A',
+                }, ...prev]);
+                addToast(`${csvRows.length} entries imported from CSV`, 'success'); resetAll();
+              }}
               className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-white bg-primary-500 rounded-lg hover:bg-primary-600">
               <Check className="w-3.5 h-3.5" /> Import {csvRows.length} Entries
             </button>
@@ -580,12 +654,78 @@ export function Import() {
               <button onClick={resetAll} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-gray-300">
                 <X className="w-3.5 h-3.5" /> Cancel
               </button>
-              <button onClick={() => { addToast(`${ocrEntries.length} entries imported from scan`, 'success'); resetAll(); }}
+              <button onClick={() => {
+                  const uniqueNames = [...new Set(ocrEntries.map(r => r.employeeName).filter(Boolean) as string[])];
+                  const totalHrs = ocrEntries.reduce((sum, r) => sum + (r.hoursWorked || 0), 0);
+                  const dates = ocrEntries.map(r => r.date).filter(Boolean).sort() as string[];
+                  const ft = fileName.toLowerCase().endsWith('.pdf') ? 'pdf' as const : 'image' as const;
+                  setImportHistory(prev => [{
+                    id: `imp-${Date.now()}`, fileName, fileType: ft,
+                    entriesImported: ocrEntries.length, importedAt: new Date(),
+                    employees: uniqueNames.length > 5 ? [`All employees (${uniqueNames.length})`] : uniqueNames.length > 0 ? uniqueNames : ['(manual entry)'],
+                    totalHours: Math.round(totalHrs),
+                    dateRange: dates.length ? `${dates[0]} - ${dates[dates.length - 1]}` : 'N/A',
+                  }, ...prev]);
+                  addToast(`${ocrEntries.length} entries imported from scan`, 'success'); resetAll();
+                }}
                 disabled={ocrEntries.length === 0}
                 className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-white bg-primary-500 rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed">
                 <Check className="w-3.5 h-3.5" /> Import {ocrEntries.length} Entries
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---- IMPORT HISTORY ---- */}
+      {importHistory.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-3 bg-gray-50 border-b border-gray-200">
+            <History className="w-4 h-4 text-secondary-500" />
+            <h3 className="text-sm font-bold text-secondary-500 uppercase">Import History</h3>
+            <span className="text-xs text-gray-400 ml-auto">{importHistory.length} imports</span>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {importHistory.map((record) => (
+              <div key={record.id} className="px-5 py-4 hover:bg-gray-50/50">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="flex-shrink-0 mt-0.5">
+                      {record.fileType === 'excel' && <FileSpreadsheet className="w-5 h-5 text-emerald-600" />}
+                      {record.fileType === 'csv' && <FileText className="w-5 h-5 text-purple-600" />}
+                      {record.fileType === 'pdf' && <FileText className="w-5 h-5 text-red-500" />}
+                      {record.fileType === 'image' && <Camera className="w-5 h-5 text-primary-500" />}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-secondary-500 truncate">{record.fileName}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {format(record.importedAt, 'MMM d, yyyy h:mm a')}
+                        </span>
+                        <span className="text-gray-300">|</span>
+                        <span>{record.dateRange}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {record.employees.slice(0, 4).map((name) => (
+                          <span key={name} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{name}</span>
+                        ))}
+                        {record.employees.length > 4 && (
+                          <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">+{record.employees.length - 4} more</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <div className="flex items-center gap-1 text-green-600 mb-1">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      <span className="text-sm font-bold">{record.entriesImported} entries</span>
+                    </div>
+                    <p className="text-xs text-gray-500">{record.totalHours}h total</p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
