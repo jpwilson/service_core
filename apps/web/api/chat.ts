@@ -72,7 +72,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'messages array required' });
   }
 
-  const model = 'anthropic/claude-sonnet-4-5-20241022';
+  const model = 'anthropic/claude-sonnet-4';
   const startTime = Date.now();
 
   try {
