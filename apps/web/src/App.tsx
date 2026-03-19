@@ -11,7 +11,6 @@ import { Settings } from './components/dashboard/Settings';
 import { Import } from './components/dashboard/Import';
 import { RoutePlanning } from './components/dashboard/RoutePlanning';
 import { DateRangePicker } from './components/shared/DateRangePicker';
-import { HelpAgent } from './components/agent/HelpAgent';
 import { NotificationPanel } from './components/shared/NotificationPanel';
 import {
   LayoutDashboard,
@@ -53,7 +52,6 @@ function App() {
       <>
         <Toaster position="top-right" />
         <TimeClock />
-        <HelpAgent />
       </>
     );
   }
@@ -258,8 +256,6 @@ function App() {
         </main>
       </div>
 
-      {/* Help Agent */}
-      <HelpAgent />
     </div>
   );
 }
