@@ -1,44 +1,62 @@
-import { useState, useEffect } from 'react';
-import { Timer, TimerOff, MapPin } from 'lucide-react';
-import type { Employee, TimeEntry } from '@servicecore/shared';
-import { formatHoursMinutes, calculateHoursWorked } from '@servicecore/shared';
+import { useState, useEffect, useMemo } from 'react';
+import { Timer, TimerOff, MapPin, Briefcase } from 'lucide-react';
+import type { Employee } from '@servicecore/shared';
+import { formatHoursMinutes, mockProjects } from '@servicecore/shared';
+import { useAppStore } from '../../store/useAppStore';
 
 interface SimpleModeProps {
   employee: Employee;
-  currentEntry: TimeEntry | null;
-  onClockIn: () => void;
-  onClockOut: () => void;
-  notes: string;
-  onNotesChange: (notes: string) => void;
 }
 
-export default function SimpleMode({
-  employee: _employee,
-  currentEntry,
-  onClockIn,
-  onClockOut,
-  notes,
-  onNotesChange,
-}: SimpleModeProps) {
+export default function SimpleMode({ employee }: SimpleModeProps) {
+  const {
+    isClockedIn,
+    clockInTime,
+    clockInProject,
+    clockIn,
+    clockOut,
+    addToast,
+  } = useAppStore();
+
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+    const interval = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  const isOnDuty = currentEntry !== null && currentEntry.clockOut === null;
+  const hoursToday = useMemo(() => {
+    if (!isClockedIn || !clockInTime) return 0;
+    return (Date.now() - new Date(clockInTime).getTime()) / 3600000;
+  }, [isClockedIn, clockInTime, currentTime]);
 
-  const hoursToday = currentEntry
-    ? calculateHoursWorked(currentEntry.clockIn, currentEntry.clockOut, currentEntry.breaks)
-    : 0;
+  const elapsedString = useMemo(() => {
+    if (!isClockedIn || !clockInTime) return '';
+    const totalSeconds = Math.floor((Date.now() - new Date(clockInTime).getTime()) / 1000);
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+  }, [isClockedIn, clockInTime, currentTime]);
+
+  const project = clockInProject
+    ? mockProjects.find((p) => p.id === clockInProject)
+    : null;
+
+  const handleClockIn = () => {
+    clockIn();
+    addToast(`Clocked in at ${new Date().toLocaleTimeString()}`, 'success');
+  };
+
+  const handleClockOut = () => {
+    clockOut();
+    addToast(`Clocked out at ${new Date().toLocaleTimeString()} - ${formatHoursMinutes(hoursToday)} worked`, 'success');
+  };
 
   const timeString = currentTime.toLocaleTimeString('en-US', {
-    hour: '2-digit',
+    hour: 'numeric',
     minute: '2-digit',
-    second: '2-digit',
     hour12: true,
   });
 
@@ -50,43 +68,48 @@ export default function SimpleMode({
   });
 
   return (
-    <div className="max-w-md mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-md mx-auto px-4 py-6 space-y-5">
       {/* Current Time */}
       <div className="text-center">
-        <p className="text-5xl font-bold text-secondary-500 tracking-tight">
+        <p className="text-5xl font-bold text-secondary-500 tracking-tight tabular-nums">
           {timeString}
         </p>
         <p className="text-secondary-300 mt-1 text-sm">{dateString}</p>
       </div>
 
-      {/* Current Shift Label */}
-      <p className="text-center text-xs font-semibold uppercase tracking-widest text-primary-500">
-        Current Shift
-      </p>
+      {/* Employee Info */}
+      <div className="text-center">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary-500">
+          {employee.firstName} {employee.lastName} &middot; {employee.role}
+        </p>
+      </div>
 
       {/* Giant Clock Button */}
       <div className="flex justify-center">
         <button
-          onClick={isOnDuty ? onClockOut : onClockIn}
+          onClick={isClockedIn ? handleClockOut : handleClockIn}
           className={`
-            w-56 h-56 rounded-full flex flex-col items-center justify-center
+            w-52 h-52 rounded-full flex flex-col items-center justify-center
             text-white font-bold text-2xl
-            transition-transform active:scale-95
+            transition-all duration-200 active:scale-95
             ${
-              isOnDuty
-                ? 'bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.5)] animate-pulse'
-                : 'bg-primary-500 shadow-[0_0_30px_rgba(248,144,32,0.3)] hover:shadow-[0_0_50px_rgba(248,144,32,0.5)]'
+              isClockedIn
+                ? 'bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)] ring-4 ring-red-200'
+                : 'bg-primary-500 shadow-[0_0_30px_rgba(248,144,32,0.3)] ring-4 ring-primary-200 hover:shadow-[0_0_50px_rgba(248,144,32,0.5)]'
             }
           `}
         >
-          {isOnDuty ? (
+          {isClockedIn ? (
             <>
-              <TimerOff className="w-12 h-12 mb-2" />
+              <TimerOff className="w-10 h-10 mb-2" />
               <span>CLOCK OUT</span>
+              <span className="text-sm font-normal mt-1 opacity-80 tabular-nums">
+                {elapsedString} elapsed
+              </span>
             </>
           ) : (
             <>
-              <Timer className="w-12 h-12 mb-2" />
+              <Timer className="w-10 h-10 mb-2" />
               <span>CLOCK IN</span>
             </>
           )}
@@ -98,23 +121,30 @@ export default function SimpleMode({
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Shift Status</p>
           <div className="flex items-center gap-2">
-            <span
-              className={`w-2.5 h-2.5 rounded-full ${
-                isOnDuty ? 'bg-green-500' : 'bg-gray-400'
-              }`}
-            />
+            <span className={`w-2.5 h-2.5 rounded-full ${isClockedIn ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
             <span className="text-sm font-semibold text-secondary-500">
-              {isOnDuty ? 'On Duty' : 'Off Duty'}
+              {isClockedIn ? 'On Duty' : 'Off Duty'}
             </span>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Today</p>
-          <p className="text-sm font-semibold text-secondary-500">
+          <p className="text-sm font-semibold text-secondary-500 tabular-nums">
             {formatHoursMinutes(hoursToday)}
           </p>
         </div>
       </div>
+
+      {/* Active Project */}
+      {project && isClockedIn && (
+        <div className="bg-primary-50 rounded-xl border border-primary-200 p-4 flex items-center gap-3">
+          <Briefcase className="w-5 h-5 text-primary-500 flex-shrink-0" />
+          <div>
+            <p className="text-xs text-primary-600 uppercase tracking-wide">Active Project</p>
+            <p className="text-sm font-medium text-primary-800">{project.name}</p>
+          </div>
+        </div>
+      )}
 
       {/* Location Card */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3">
@@ -123,26 +153,21 @@ export default function SimpleMode({
         </div>
         <div>
           <p className="text-xs text-gray-500 uppercase tracking-wide">Location</p>
-          <p className="text-sm font-medium text-secondary-500">
-            Denver Central Logistics Hub
-          </p>
+          <p className="text-sm font-medium text-secondary-500">Denver Central Logistics Hub</p>
         </div>
       </div>
 
       {/* Shift Notes */}
       <div>
-        <label
-          htmlFor="shift-notes"
-          className="block text-xs text-gray-500 uppercase tracking-wide mb-1.5"
-        >
+        <label htmlFor="shift-notes" className="block text-xs text-gray-500 uppercase tracking-wide mb-1.5">
           Shift Notes
         </label>
         <textarea
           id="shift-notes"
           value={notes}
-          onChange={(e) => onNotesChange(e.target.value)}
+          onChange={(e) => setNotes(e.target.value)}
           placeholder="Add notes about your shift..."
-          rows={3}
+          rows={2}
           className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-secondary-500 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
         />
       </div>

@@ -33,8 +33,8 @@ describe('mockEmployees', () => {
 });
 
 describe('mockProjects', () => {
-  it('has 7 projects', () => {
-    expect(mockProjects.length).toBe(7);
+  it('has 15 projects', () => {
+    expect(mockProjects.length).toBe(15);
   });
 
   it('all projects have required fields', () => {

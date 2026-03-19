@@ -8,3 +8,4 @@ export * from './utils/pdf';
 export { mockEmployees } from './data/mockEmployees';
 export { mockProjects } from './data/mockProjects';
 export { mockTimeEntries, mockActivityEvents } from './data/mockTimeEntries';
+export { mockNotifications } from './data/mockNotifications';

@@ -1,0 +1,10 @@
+{
+  "buildCommand": "cd ../.. && pnpm turbo build --filter=@servicecore/web",
+  "outputDirectory": "dist",
+  "installCommand": "cd ../.. && pnpm install",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}

@@ -1,4 +1,5 @@
 import { ExcelActions } from '../features/import-export/ExcelActions';
+import { KronosImport } from '../features/import-export/KronosImport';
 import { TimesheetScanner } from '../features/ocr/TimesheetScanner';
 
 export function Import() {
@@ -7,11 +8,13 @@ export function Import() {
       <div>
         <h2 className="text-lg font-semibold text-[#0a1f44] mb-1">Import Data</h2>
         <p className="text-sm text-gray-500">
-          Import timesheet data from Excel files or scan paper timesheets using OCR.
+          Import timesheet data from Excel, CSV, Kronos/UKG exports, or scan paper timesheets using OCR.
         </p>
       </div>
 
       <ExcelActions />
+
+      <KronosImport />
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
         <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
@@ -30,9 +33,12 @@ export function Import() {
               <circle cx="12" cy="13" r="3" />
             </svg>
           </div>
-          <h3 className="text-base font-semibold text-[#0a1f44]">
-            OCR Paper Timesheet Scanner
-          </h3>
+          <div>
+            <h3 className="text-base font-semibold text-[#0a1f44]">
+              OCR Paper Timesheet Scanner
+            </h3>
+            <p className="text-xs text-gray-400">Scan paper timesheets, PDFs, or photos (JPG, PNG)</p>
+          </div>
         </div>
         <div className="px-6 py-5">
           <TimesheetScanner />

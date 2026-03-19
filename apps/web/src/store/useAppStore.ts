@@ -11,16 +11,22 @@ interface Toast {
 interface AppState {
   currentView: 'timeclock' | 'dashboard';
   timeClockMode: 'simple' | 'advanced';
+  timeClockTab: 'time' | 'schedule' | 'profile';
   currentEmployeeId: string;
   selectedEmployeeId: string | null;
-  dashboardTab: 'overview' | 'hours' | 'attendance' | 'labor-cost' | 'projects' | 'employees' | 'import';
+  dashboardTab: 'overview' | 'hours' | 'attendance' | 'labor-cost' | 'projects' | 'employees' | 'import' | 'approvals' | 'settings' | 'routes';
   dateRange: DateRange;
   settings: AppSettings;
   timesheetApprovals: Map<string, TimesheetStatus>;
   toasts: Toast[];
+  isClockedIn: boolean;
+  clockInTime: string | null;
+  clockInProject: string | null;
+  showGuidedTour: boolean;
 
   setCurrentView: (view: 'timeclock' | 'dashboard') => void;
   setTimeClockMode: (mode: 'simple' | 'advanced') => void;
+  setTimeClockTab: (tab: AppState['timeClockTab']) => void;
   setCurrentEmployeeId: (id: string) => void;
   setSelectedEmployeeId: (id: string | null) => void;
   setDashboardTab: (tab: AppState['dashboardTab']) => void;
@@ -30,12 +36,16 @@ interface AppState {
   rejectTimesheet: (entryId: string) => void;
   addToast: (message: string, type: Toast['type']) => void;
   removeToast: (id: string) => void;
+  clockIn: (projectId?: string) => void;
+  clockOut: () => void;
+  setShowGuidedTour: (show: boolean) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
   currentView: 'timeclock',
   timeClockMode: 'simple',
-  currentEmployeeId: 'emp-1',
+  timeClockTab: 'time',
+  currentEmployeeId: 'emp-001',
   selectedEmployeeId: null,
   dashboardTab: 'overview',
   dateRange: {
@@ -59,9 +69,14 @@ export const useAppStore = create<AppState>((set) => ({
   },
   timesheetApprovals: new Map(),
   toasts: [],
+  isClockedIn: false,
+  clockInTime: null,
+  clockInProject: null,
+  showGuidedTour: false,
 
   setCurrentView: (view) => set({ currentView: view }),
   setTimeClockMode: (mode) => set({ timeClockMode: mode }),
+  setTimeClockTab: (tab) => set({ timeClockTab: tab }),
   setCurrentEmployeeId: (id) => set({ currentEmployeeId: id }),
   setSelectedEmployeeId: (id) => set({ selectedEmployeeId: id }),
   setDashboardTab: (tab) => set({ dashboardTab: tab }),
@@ -98,4 +113,20 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => ({
       toasts: state.toasts.filter((t) => t.id !== id),
     })),
+
+  clockIn: (projectId) =>
+    set({
+      isClockedIn: true,
+      clockInTime: new Date().toISOString(),
+      clockInProject: projectId || null,
+    }),
+
+  clockOut: () =>
+    set({
+      isClockedIn: false,
+      clockInTime: null,
+      clockInProject: null,
+    }),
+
+  setShowGuidedTour: (show) => set({ showGuidedTour: show }),
 }));
