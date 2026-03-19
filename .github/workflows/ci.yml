@@ -35,7 +35,7 @@ jobs:
         run: pnpm turbo test:run
 
       - name: Build
-        run: pnpm turbo build
+        run: pnpm turbo build --filter=@servicecore/web --filter=@servicecore/shared
 
       - name: Verify build output exists
         run: |
