@@ -23,11 +23,11 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
-              <Phone className="w-3 h-3" /> SALES <strong>1-844-336-0611</strong>
+              <Phone className="w-3 h-3" /> SALES <strong>1-888-PMP-CREW</strong>
             </span>
             <span className="hidden sm:inline">|</span>
             <span className="hidden sm:flex items-center gap-1">
-              <Phone className="w-3 h-3" /> SUPPORT <strong>1-888-691-1333</strong>
+              <Phone className="w-3 h-3" /> SUPPORT <strong>1-800-GOT-JONS</strong>
             </span>
           </div>
           <button

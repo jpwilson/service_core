@@ -10,49 +10,48 @@ permissions:
   contents: read
 
 jobs:
-  lint-and-type-check:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @servicecore/web lint
-      - run: pnpm --filter @servicecore/web typecheck
 
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo test:run
 
-  build:
-    runs-on: ubuntu-latest
-    needs: [lint-and-type-check, test]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo build
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm --filter @servicecore/web lint
+
+      - name: Typecheck
+        run: pnpm --filter @servicecore/web typecheck
+
+      - name: Run tests
+        run: pnpm turbo test:run
+
+      - name: Build
+        run: pnpm turbo build
+
+      - name: Verify build output exists
+        run: |
+          if [ ! -d "apps/web/dist" ]; then
+            echo "ERROR: Build output directory apps/web/dist does not exist"
+            exit 1
+          fi
+          if [ ! -f "apps/web/dist/index.html" ]; then
+            echo "ERROR: Build output apps/web/dist/index.html does not exist"
+            exit 1
+          fi
+          echo "Build output verified successfully"
+          ls -la apps/web/dist/
+
       - uses: actions/upload-artifact@v4
         with:
           name: web-dist
