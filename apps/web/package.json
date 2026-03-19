@@ -20,6 +20,7 @@
     "langfuse": "^3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",
+    "pdfjs-dist": "^5.5.207",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.6.0",
