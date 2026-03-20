@@ -10,6 +10,12 @@ import { EmployeeDetail } from './components/dashboard/EmployeeDetail';
 import { Settings } from './components/dashboard/Settings';
 import { Import } from './components/dashboard/Import';
 import { RoutePlanning } from './components/dashboard/RoutePlanning';
+import { Scheduling } from './components/dashboard/Scheduling';
+import { Customers } from './components/dashboard/Customers';
+import { Equipment } from './components/dashboard/Equipment';
+import { Invoices } from './components/dashboard/Invoices';
+import { QuickBooksExport } from './components/dashboard/QuickBooksExport';
+import { AuditLog } from './components/dashboard/AuditLog';
 import { DateRangePicker } from './components/shared/DateRangePicker';
 import { NotificationPanel } from './components/shared/NotificationPanel';
 import {
@@ -25,6 +31,12 @@ import {
   DollarSign,
   Shield,
   Route,
+  CalendarDays,
+  Users,
+  Container,
+  Receipt,
+  FileOutput,
+  ScrollText,
 } from 'lucide-react';
 
 function App() {
@@ -60,8 +72,14 @@ function App() {
     { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
     { id: 'hours' as const, label: 'Analytics', icon: BarChart3 },
     { id: 'approvals' as const, label: 'Approvals', icon: FileCheck },
-    { id: 'import' as const, label: 'Import', icon: Upload },
+    { id: 'scheduling' as const, label: 'Scheduling', icon: CalendarDays },
     { id: 'routes' as const, label: 'Route Planning', icon: Route },
+    { id: 'customers' as const, label: 'Customers', icon: Users },
+    { id: 'equipment' as const, label: 'Equipment', icon: Container },
+    { id: 'invoices' as const, label: 'Invoices', icon: Receipt },
+    { id: 'import' as const, label: 'Import', icon: Upload },
+    { id: 'quickbooks' as const, label: 'Accounting', icon: FileOutput },
+    { id: 'audit' as const, label: 'Audit Log', icon: ScrollText },
     { id: 'settings' as const, label: 'Settings', icon: SettingsIcon },
   ];
 
@@ -86,10 +104,22 @@ function App() {
         return <Analytics />;
       case 'approvals':
         return <TimesheetApprovals />;
+      case 'scheduling':
+        return <Scheduling />;
       case 'import':
         return <Import />;
       case 'routes':
         return <RoutePlanning />;
+      case 'customers':
+        return <Customers />;
+      case 'equipment':
+        return <Equipment />;
+      case 'invoices':
+        return <Invoices />;
+      case 'quickbooks':
+        return <QuickBooksExport />;
+      case 'audit':
+        return <AuditLog />;
       case 'settings':
         return <Settings />;
       default:
@@ -108,7 +138,7 @@ function App() {
           <h1 className="text-xl font-bold tracking-tight">ServiceCore</h1>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {sidebarItems.map((item) => {
             const isActive =
               dashboardTab === item.id ||
@@ -118,13 +148,13 @@ function App() {
               <button
                 key={item.id}
                 onClick={() => setDashboardTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-white/10 text-white'
                     : 'text-white/60 hover:bg-white/5 hover:text-white'
                 }`}
               >
-                <item.icon className="w-5 h-5" />
+                <item.icon className="w-4 h-4" />
                 {item.label}
               </button>
             );
@@ -133,9 +163,9 @@ function App() {
           {/* Project Details Link */}
           <button
             onClick={() => navigate('/costs')}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-colors"
           >
-            <Shield className="w-5 h-5" />
+            <Shield className="w-4 h-4" />
             Project Details
           </button>
         </nav>
@@ -143,17 +173,17 @@ function App() {
         <div className="px-3 py-2 border-t border-white/10">
           <button
             onClick={() => setCurrentView('timeclock')}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-colors"
           >
-            <Clock className="w-5 h-5" />
+            <Clock className="w-4 h-4" />
             Time Clock
           </button>
         </div>
 
         {/* User Info */}
         {user && (
-          <div className="px-3 py-4 border-t border-white/10">
-            <div className="flex items-center gap-3 px-4 mb-3">
+          <div className="px-3 py-3 border-t border-white/10">
+            <div className="flex items-center gap-3 px-4 mb-2">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
                 style={{ backgroundColor: user.avatar }}
@@ -221,7 +251,7 @@ function App() {
 
         {/* Mobile nav */}
         <div className="lg:hidden flex border-b border-gray-200 bg-white px-2 overflow-x-auto">
-          {sidebarItems.map((item) => {
+          {sidebarItems.slice(0, 6).map((item) => {
             const isActive =
               dashboardTab === item.id ||
               (item.id === 'hours' &&

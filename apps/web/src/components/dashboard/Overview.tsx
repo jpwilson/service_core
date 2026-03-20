@@ -20,6 +20,8 @@ import {
 import { MetricCard } from '../shared/MetricCard';
 import { TeamFeed } from './TeamFeed';
 import { PayrollReportButton } from '../features/reports/PayrollReportButton';
+import { PredictiveAlerts } from '../shared/PredictiveAlerts';
+import { AnomalyDetection } from '../shared/AnomalyDetection';
 
 export function Overview() {
   const dateRange = useAppStore((s) => s.dateRange);
@@ -120,6 +122,9 @@ export function Overview() {
         <PayrollReportButton />
       </div>
 
+      {/* Predictive Alerts */}
+      <PredictiveAlerts />
+
       {/* Metric cards grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricCard
@@ -161,6 +166,9 @@ export function Overview() {
           variant={metrics.pendingApprovals > 5 ? 'warning' : 'default'}
         />
       </div>
+
+      {/* AI Anomaly Detection */}
+      <AnomalyDetection />
 
       {/* Team activity feed */}
       <TeamFeed />
