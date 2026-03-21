@@ -10,30 +10,147 @@ import {
   Zap,
   Clock,
   Truck,
+  Plus,
+  X,
+  Search,
+  Filter,
+  AlertTriangle,
 } from 'lucide-react';
 
-interface Stop {
+// ─── Types ────────────────────────────────────────────────────────
+
+interface ServiceLocation {
   id: string;
   name: string;
   address: string;
   lat: number;
   lng: number;
+  type: 'construction' | 'event' | 'park' | 'commercial' | 'residential' | 'municipal' | 'industrial';
+  units: number; // how many units on-site
+  lastService: string; // relative description
+  priority: 'high' | 'medium' | 'low';
 }
 
-const EXAMPLE_STOPS: Stop[] = [
-  { id: 's1', name: 'Main Office / Yard', address: '1200 N Alvernon Way, Tucson, AZ 85712', lat: 32.2319, lng: -110.9128 },
-  { id: 's2', name: 'Downtown Construction Site', address: '75 E Broadway Blvd, Tucson, AZ 85701', lat: 32.2217, lng: -110.9695 },
-  { id: 's3', name: 'University Event Setup', address: '1303 E University Blvd, Tucson, AZ 85719', lat: 32.2319, lng: -110.9501 },
-  { id: 's4', name: 'Oro Valley Festival Grounds', address: '11000 N La Cañada Dr, Oro Valley, AZ 85737', lat: 32.3909, lng: -110.9665 },
-  { id: 's5', name: 'Marana Regional Park', address: '12300 N Sandario Rd, Marana, AZ 85653', lat: 32.4363, lng: -111.1547 },
-  { id: 's6', name: 'Southside Warehouse', address: '4002 S Park Ave, Tucson, AZ 85714', lat: 32.1823, lng: -110.9665 },
-  { id: 's7', name: 'Catalina Foothills Residence', address: '6401 N Campbell Ave, Tucson, AZ 85718', lat: 32.2827, lng: -110.9390 },
-  { id: 's8', name: 'Rita Ranch Development', address: '8900 S Rita Rd, Tucson, AZ 85747', lat: 32.1127, lng: -110.8421 },
-  { id: 's9', name: 'Tucson Mall Service Area', address: '4500 N Oracle Rd, Tucson, AZ 85705', lat: 32.2672, lng: -110.9847 },
-  { id: 's10', name: 'Green Valley Retirement Community', address: '1070 S Calle De Las Casitas, Green Valley, AZ 85614', lat: 31.8545, lng: -111.0002 },
+interface RouteStop extends ServiceLocation {
+  legDistance?: number; // meters from previous stop (from OSRM)
+  legDuration?: number; // seconds from previous stop (from OSRM)
+  trafficLevel?: 'low' | 'moderate' | 'heavy'; // simulated
+}
+
+interface RouteGeometry {
+  coordinates: [number, number][]; // [lng, lat] pairs from OSRM
+}
+
+// ─── 50 Service Locations (Tucson metro area) ─────────────────────
+
+const SERVICE_LOCATIONS: ServiceLocation[] = [
+  // Construction Sites (12)
+  { id: 'loc-01', name: 'Downtown Highrise Project', address: '75 E Broadway Blvd, Tucson, AZ', lat: 32.2217, lng: -110.9695, type: 'construction', units: 4, lastService: '2 days ago', priority: 'high' },
+  { id: 'loc-02', name: 'Houghton Rd Widening', address: '8500 E Houghton Rd, Tucson, AZ', lat: 32.1780, lng: -110.7310, type: 'construction', units: 6, lastService: 'yesterday', priority: 'high' },
+  { id: 'loc-03', name: 'Oro Valley Subdivision', address: '1200 W Lambert Ln, Oro Valley, AZ', lat: 32.3950, lng: -110.9800, type: 'construction', units: 8, lastService: '3 days ago', priority: 'high' },
+  { id: 'loc-04', name: 'Kolb & 22nd Retail Build', address: '7200 E 22nd St, Tucson, AZ', lat: 32.2050, lng: -110.8200, type: 'construction', units: 3, lastService: 'yesterday', priority: 'medium' },
+  { id: 'loc-05', name: 'Marana Town Center', address: '12100 N Cortaro Rd, Marana, AZ', lat: 32.4200, lng: -111.1000, type: 'construction', units: 5, lastService: '4 days ago', priority: 'high' },
+  { id: 'loc-06', name: 'Valencia Rd Bridge Repair', address: '3400 W Valencia Rd, Tucson, AZ', lat: 32.1380, lng: -111.0200, type: 'construction', units: 2, lastService: 'today', priority: 'low' },
+  { id: 'loc-07', name: 'Grant Rd Resurfacing', address: '2800 E Grant Rd, Tucson, AZ', lat: 32.2520, lng: -110.9300, type: 'construction', units: 3, lastService: '2 days ago', priority: 'medium' },
+  { id: 'loc-08', name: 'Tangerine Rd Extension', address: '14000 N Tangerine Rd, Marana, AZ', lat: 32.4530, lng: -111.0700, type: 'construction', units: 4, lastService: '5 days ago', priority: 'high' },
+  { id: 'loc-09', name: 'Speedway Demolition Site', address: '4100 E Speedway Blvd, Tucson, AZ', lat: 32.2360, lng: -110.8900, type: 'construction', units: 2, lastService: 'yesterday', priority: 'medium' },
+  { id: 'loc-10', name: 'Sahuarita New Homes Phase 3', address: '15800 S Rancho Sahuarita Blvd, Sahuarita, AZ', lat: 31.9400, lng: -110.9600, type: 'construction', units: 10, lastService: '3 days ago', priority: 'high' },
+  { id: 'loc-11', name: 'River Rd Apartment Complex', address: '3200 E River Rd, Tucson, AZ', lat: 32.2820, lng: -110.9400, type: 'construction', units: 6, lastService: '2 days ago', priority: 'medium' },
+  { id: 'loc-12', name: 'Ajo Way Warehouse Build', address: '2100 W Ajo Way, Tucson, AZ', lat: 32.1800, lng: -111.0100, type: 'construction', units: 3, lastService: 'yesterday', priority: 'low' },
+
+  // Events (10)
+  { id: 'loc-13', name: 'U of A Football Tailgate', address: '1303 E University Blvd, Tucson, AZ', lat: 32.2319, lng: -110.9501, type: 'event', units: 12, lastService: 'today', priority: 'high' },
+  { id: 'loc-14', name: 'Tucson Rodeo Grounds', address: '4823 S 6th Ave, Tucson, AZ', lat: 32.1700, lng: -110.9650, type: 'event', units: 20, lastService: 'today', priority: 'high' },
+  { id: 'loc-15', name: '4th Ave Street Fair', address: '400 N 4th Ave, Tucson, AZ', lat: 32.2280, lng: -110.9660, type: 'event', units: 15, lastService: 'today', priority: 'high' },
+  { id: 'loc-16', name: 'Reid Park Concert Series', address: '900 S Randolph Way, Tucson, AZ', lat: 32.2100, lng: -110.9310, type: 'event', units: 8, lastService: '2 days ago', priority: 'medium' },
+  { id: 'loc-17', name: 'Oro Valley Music Festival', address: '11000 N La Cañada Dr, Oro Valley, AZ', lat: 32.3909, lng: -110.9665, type: 'event', units: 10, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-18', name: 'Pima County Fairgrounds', address: '11300 S Houghton Rd, Tucson, AZ', lat: 32.1300, lng: -110.7350, type: 'event', units: 18, lastService: 'yesterday', priority: 'high' },
+  { id: 'loc-19', name: 'Rillito Racetrack', address: '4502 N 1st Ave, Tucson, AZ', lat: 32.2730, lng: -110.9700, type: 'event', units: 8, lastService: '4 days ago', priority: 'low' },
+  { id: 'loc-20', name: 'Kino Sports Complex', address: '2500 E Ajo Way, Tucson, AZ', lat: 32.1810, lng: -110.9400, type: 'event', units: 14, lastService: 'yesterday', priority: 'medium' },
+  { id: 'loc-21', name: 'Tucson Convention Center', address: '260 S Church Ave, Tucson, AZ', lat: 32.2180, lng: -110.9730, type: 'event', units: 10, lastService: 'today', priority: 'high' },
+  { id: 'loc-22', name: 'Marana Heritage Farm Festival', address: '12300 N Sandario Rd, Marana, AZ', lat: 32.4363, lng: -111.1547, type: 'event', units: 6, lastService: '5 days ago', priority: 'low' },
+
+  // Parks & Recreation (8)
+  { id: 'loc-23', name: 'Catalina State Park', address: '11570 N Oracle Rd, Tucson, AZ', lat: 32.3950, lng: -110.9200, type: 'park', units: 4, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-24', name: 'Saguaro National Park East', address: '3693 S Old Spanish Trail, Tucson, AZ', lat: 32.1800, lng: -110.7370, type: 'park', units: 6, lastService: '4 days ago', priority: 'medium' },
+  { id: 'loc-25', name: 'Tucson Mountain Park', address: '1548 S Kinney Rd, Tucson, AZ', lat: 32.2200, lng: -111.1100, type: 'park', units: 4, lastService: '5 days ago', priority: 'low' },
+  { id: 'loc-26', name: 'Brandi Fenton Memorial Park', address: '3482 E River Rd, Tucson, AZ', lat: 32.2830, lng: -110.9200, type: 'park', units: 3, lastService: '2 days ago', priority: 'medium' },
+  { id: 'loc-27', name: 'Udall Park', address: '7200 E Tanque Verde Rd, Tucson, AZ', lat: 32.2530, lng: -110.8200, type: 'park', units: 2, lastService: 'yesterday', priority: 'low' },
+  { id: 'loc-28', name: 'Kennedy Park', address: '3600 S La Cholla Blvd, Tucson, AZ', lat: 32.1570, lng: -111.0400, type: 'park', units: 3, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-29', name: 'Agua Caliente Park', address: '12325 E Roger Rd, Tucson, AZ', lat: 32.2700, lng: -110.7400, type: 'park', units: 2, lastService: '6 days ago', priority: 'high' },
+  { id: 'loc-30', name: 'Silverbell Lake Park', address: '5600 N Silverbell Rd, Tucson, AZ', lat: 32.2900, lng: -111.0600, type: 'park', units: 2, lastService: '4 days ago', priority: 'low' },
+
+  // Commercial (8)
+  { id: 'loc-31', name: 'Tucson Mall Service Area', address: '4500 N Oracle Rd, Tucson, AZ', lat: 32.2672, lng: -110.9847, type: 'commercial', units: 2, lastService: 'yesterday', priority: 'low' },
+  { id: 'loc-32', name: 'Park Place Mall Loading', address: '5870 E Broadway Blvd, Tucson, AZ', lat: 32.2190, lng: -110.8600, type: 'commercial', units: 2, lastService: '2 days ago', priority: 'low' },
+  { id: 'loc-33', name: 'Auto Dealership Row', address: '4635 S Palo Verde Blvd, Tucson, AZ', lat: 32.1680, lng: -110.9500, type: 'commercial', units: 4, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-34', name: 'Oracle Wetmore Plaza', address: '3900 N Oracle Rd, Tucson, AZ', lat: 32.2600, lng: -110.9830, type: 'commercial', units: 2, lastService: 'yesterday', priority: 'low' },
+  { id: 'loc-35', name: 'Broadway Village', address: '26 S Country Club Rd, Tucson, AZ', lat: 32.2200, lng: -110.9400, type: 'commercial', units: 1, lastService: '2 days ago', priority: 'low' },
+  { id: 'loc-36', name: 'Foothills Mall', address: '7401 N La Cholla Blvd, Tucson, AZ', lat: 32.3010, lng: -111.0400, type: 'commercial', units: 3, lastService: '4 days ago', priority: 'medium' },
+  { id: 'loc-37', name: 'Costco Business Center', address: '3901 E 44th St, Tucson, AZ', lat: 32.1900, lng: -110.9200, type: 'commercial', units: 2, lastService: 'yesterday', priority: 'low' },
+  { id: 'loc-38', name: 'El Con Center', address: '3601 E Broadway Blvd, Tucson, AZ', lat: 32.2200, lng: -110.9100, type: 'commercial', units: 2, lastService: '3 days ago', priority: 'low' },
+
+  // Residential Communities (6)
+  { id: 'loc-39', name: 'Catalina Foothills HOA', address: '6401 N Campbell Ave, Tucson, AZ', lat: 32.2827, lng: -110.9390, type: 'residential', units: 4, lastService: '2 days ago', priority: 'medium' },
+  { id: 'loc-40', name: 'Rita Ranch Community', address: '8900 S Rita Rd, Tucson, AZ', lat: 32.1127, lng: -110.8421, type: 'residential', units: 6, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-41', name: 'Green Valley Retirement', address: '1070 S Calle De Las Casitas, Green Valley, AZ', lat: 31.8545, lng: -111.0002, type: 'residential', units: 4, lastService: '5 days ago', priority: 'low' },
+  { id: 'loc-42', name: 'Civano Community', address: '10501 E Drexel Rd, Tucson, AZ', lat: 32.1400, lng: -110.7800, type: 'residential', units: 3, lastService: '4 days ago', priority: 'medium' },
+  { id: 'loc-43', name: 'Dove Mountain Villas', address: '5700 W Dove Mountain Blvd, Marana, AZ', lat: 32.4100, lng: -111.1000, type: 'residential', units: 2, lastService: '6 days ago', priority: 'low' },
+  { id: 'loc-44', name: 'Vail Ranch Estates', address: '13400 E Old Spanish Trail, Vail, AZ', lat: 32.0600, lng: -110.7100, type: 'residential', units: 4, lastService: '3 days ago', priority: 'medium' },
+
+  // Municipal (3)
+  { id: 'loc-45', name: 'Tucson City Hall Annex', address: '255 W Alameda St, Tucson, AZ', lat: 32.2230, lng: -110.9740, type: 'municipal', units: 2, lastService: 'yesterday', priority: 'low' },
+  { id: 'loc-46', name: 'Pima County Courthouse', address: '115 N Church Ave, Tucson, AZ', lat: 32.2240, lng: -110.9720, type: 'municipal', units: 2, lastService: '2 days ago', priority: 'low' },
+  { id: 'loc-47', name: 'Fire Station 7 Training', address: '3940 N 1st Ave, Tucson, AZ', lat: 32.2600, lng: -110.9700, type: 'municipal', units: 3, lastService: '3 days ago', priority: 'medium' },
+
+  // Industrial (3)
+  { id: 'loc-48', name: 'Southside Recycling Yard', address: '4002 S Park Ave, Tucson, AZ', lat: 32.1823, lng: -110.9665, type: 'industrial', units: 4, lastService: '2 days ago', priority: 'medium' },
+  { id: 'loc-49', name: 'Airport Industrial Park', address: '6560 S Tucson Blvd, Tucson, AZ', lat: 32.1500, lng: -110.9400, type: 'industrial', units: 5, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-50', name: 'Irvington Rd Solar Farm', address: '5200 W Irvington Rd, Tucson, AZ', lat: 32.1560, lng: -111.0500, type: 'industrial', units: 3, lastService: '4 days ago', priority: 'low' },
 ];
 
-// Create numbered marker icons
+const DEPOT: ServiceLocation = {
+  id: 'depot',
+  name: 'Main Office / Yard',
+  address: '1200 N Alvernon Way, Tucson, AZ 85712',
+  lat: 32.2319,
+  lng: -110.9128,
+  type: 'industrial',
+  units: 0,
+  lastService: '',
+  priority: 'low',
+};
+
+const TYPE_LABELS: Record<ServiceLocation['type'], string> = {
+  construction: 'Construction',
+  event: 'Event',
+  park: 'Park',
+  commercial: 'Commercial',
+  residential: 'Residential',
+  municipal: 'Municipal',
+  industrial: 'Industrial',
+};
+
+const TYPE_COLORS: Record<ServiceLocation['type'], string> = {
+  construction: 'bg-yellow-100 text-yellow-800',
+  event: 'bg-purple-100 text-purple-800',
+  park: 'bg-green-100 text-green-800',
+  commercial: 'bg-blue-100 text-blue-800',
+  residential: 'bg-pink-100 text-pink-800',
+  municipal: 'bg-gray-100 text-gray-800',
+  industrial: 'bg-orange-100 text-orange-800',
+};
+
+const PRIORITY_COLORS: Record<string, string> = {
+  high: 'text-red-600',
+  medium: 'text-yellow-600',
+  low: 'text-green-600',
+};
+
+const MAX_ROUTE_STOPS = 15;
+
+// ─── Helpers ──────────────────────────────────────────────────────
+
 function createNumberedIcon(num: number, isDepot: boolean) {
   const color = isDepot ? '#0a1f44' : '#f89020';
   return L.divIcon({
@@ -57,8 +174,35 @@ function createNumberedIcon(num: number, isDepot: boolean) {
   });
 }
 
+function createPoolIcon(type: ServiceLocation['type']) {
+  const colors: Record<string, string> = {
+    construction: '#EAB308',
+    event: '#A855F7',
+    park: '#22C55E',
+    commercial: '#3B82F6',
+    residential: '#EC4899',
+    municipal: '#6B7280',
+    industrial: '#F97316',
+  };
+  return L.divIcon({
+    className: 'custom-marker',
+    html: `<div style="
+      background: ${colors[type] || '#999'};
+      color: white;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      opacity: 0.6;
+    "></div>`,
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
+  });
+}
+
 function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 3958.8; // miles
+  const R = 3958.8;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLng = (lng2 - lng1) * (Math.PI / 180);
   const a =
@@ -67,17 +211,10 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function totalDistance(stops: Stop[]): number {
-  let dist = 0;
-  for (let i = 0; i < stops.length - 1; i++) {
-    dist += haversineDistance(stops[i].lat, stops[i].lng, stops[i + 1].lat, stops[i + 1].lng);
-  }
-  return dist;
-}
-
-function nearestNeighborOptimize(stops: Stop[]): Stop[] {
+function nearestNeighborOptimize(stops: RouteStop[]): RouteStop[] {
   if (stops.length <= 2) return [...stops];
-  const result: Stop[] = [stops[0]];
+  // Keep depot as first stop
+  const result: RouteStop[] = [stops[0]];
   const remaining = stops.slice(1);
 
   while (remaining.length > 0) {
@@ -96,31 +233,187 @@ function nearestNeighborOptimize(stops: Stop[]): Stop[] {
   return result;
 }
 
-// Component to auto-fit map bounds when stops change
-function FitBounds({ stops }: { stops: Stop[] }) {
+// Simulate traffic levels based on time of day and road segments
+function simulateTraffic(): 'low' | 'moderate' | 'heavy' {
+  const rand = Math.random();
+  if (rand < 0.5) return 'low';
+  if (rand < 0.85) return 'moderate';
+  return 'heavy';
+}
+
+const TRAFFIC_COLORS = {
+  low: '#22C55E',
+  moderate: '#EAB308',
+  heavy: '#EF4444',
+};
+
+// ─── OSRM Integration ────────────────────────────────────────────
+
+async function fetchOSRMRoute(stops: RouteStop[]): Promise<{
+  geometry: RouteGeometry;
+  legs: { distance: number; duration: number }[];
+  totalDistance: number;
+  totalDuration: number;
+} | null> {
+  if (stops.length < 2) return null;
+
+  const coords = stops.map((s) => `${s.lng},${s.lat}`).join(';');
+  const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.code !== 'Ok' || !data.routes?.length) return null;
+
+    const route = data.routes[0];
+    return {
+      geometry: route.geometry,
+      legs: route.legs.map((leg: { distance: number; duration: number }) => ({
+        distance: leg.distance,
+        duration: leg.duration,
+      })),
+      totalDistance: route.distance,
+      totalDuration: route.duration,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ─── Map sub-components ───────────────────────────────────────────
+
+function FitBounds({ stops, poolLocations, showPool }: { stops: RouteStop[]; poolLocations: ServiceLocation[]; showPool: boolean }) {
   const map = useMap();
   useEffect(() => {
-    if (stops.length > 0) {
-      const bounds = L.latLngBounds(stops.map((s) => [s.lat, s.lng]));
+    const allPoints = [...stops];
+    if (showPool) {
+      allPoints.push(...(poolLocations as RouteStop[]));
+    }
+    if (allPoints.length > 0) {
+      const bounds = L.latLngBounds(allPoints.map((s) => [s.lat, s.lng]));
       map.fitBounds(bounds, { padding: [40, 40] });
     }
-  }, [stops, map]);
+  }, [stops, poolLocations, showPool, map]);
   return null;
 }
 
+// ─── Main Component ───────────────────────────────────────────────
+
 export function RoutePlanning() {
-  const [stops, setStops] = useState<Stop[]>(EXAMPLE_STOPS);
+  // Route state — starts with just the depot
+  const [routeStops, setRouteStops] = useState<RouteStop[]>([{ ...DEPOT }]);
+  const [optimized, setOptimized] = useState(false);
+  const [routeGeometry, setRouteGeometry] = useState<[number, number][] | null>(null);
+  const [legTraffic, setLegTraffic] = useState<('low' | 'moderate' | 'heavy')[]>([]);
+  const [routeLoading, setRouteLoading] = useState(false);
+
+  // Pool state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<ServiceLocation['type'] | 'all'>('all');
+  const [showFilters, setShowFilters] = useState(false);
+  const [priorityFilter, setPriorityFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+
+  // Drag state
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
-  const [optimized, setOptimized] = useState(false);
   const dragNode = useRef<HTMLDivElement | null>(null);
 
-  const dist = totalDistance(stops);
-  const estimatedTime = Math.round((dist / 30) * 60);
+  // Which locations are already in the route?
+  const routeIds = new Set(routeStops.map((s) => s.id));
 
-  const routeLine: [number, number][] = stops.map((s) => [s.lat, s.lng]);
+  // Filter pool locations
+  const filteredPool = SERVICE_LOCATIONS.filter((loc) => {
+    if (routeIds.has(loc.id)) return false;
+    if (typeFilter !== 'all' && loc.type !== typeFilter) return false;
+    if (priorityFilter !== 'all' && loc.priority !== priorityFilter) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return loc.name.toLowerCase().includes(q) || loc.address.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  // Route stats
+  const totalRouteDist = routeStops.reduce((sum, s) => sum + (s.legDistance || 0), 0);
+  const totalRouteDuration = routeStops.reduce((sum, s) => sum + (s.legDuration || 0), 0);
+  const stopsCount = routeStops.length - 1; // exclude depot
+
+  // Fallback: haversine total if no OSRM data
+  const haversineDist = (() => {
+    let d = 0;
+    for (let i = 1; i < routeStops.length; i++) {
+      d += haversineDistance(routeStops[i - 1].lat, routeStops[i - 1].lng, routeStops[i].lat, routeStops[i].lng);
+    }
+    return d;
+  })();
+
+  const displayDist = totalRouteDist > 0 ? (totalRouteDist / 1609.34) : haversineDist;
+  const displayTime = totalRouteDuration > 0 ? Math.round(totalRouteDuration / 60) : Math.round((haversineDist / 30) * 60);
+
+  // Fetch OSRM route whenever stops change
+  useEffect(() => {
+    if (routeStops.length < 2) {
+      setRouteGeometry(null);
+      setLegTraffic([]);
+      return;
+    }
+
+    let cancelled = false;
+    setRouteLoading(true);
+
+    fetchOSRMRoute(routeStops).then((result) => {
+      if (cancelled) return;
+      setRouteLoading(false);
+
+      if (result) {
+        // Real road geometry
+        setRouteGeometry(result.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
+
+        // Update stops with leg data
+        const traffic: ('low' | 'moderate' | 'heavy')[] = [];
+        setRouteStops((prev) => {
+          const updated = prev.map((stop, idx) => {
+            if (idx === 0) return { ...stop, legDistance: 0, legDuration: 0 };
+            const leg = result.legs[idx - 1];
+            const t = simulateTraffic();
+            traffic.push(t);
+            return {
+              ...stop,
+              legDistance: leg?.distance || 0,
+              legDuration: leg?.duration || 0,
+              trafficLevel: t,
+            };
+          });
+          return updated;
+        });
+        setLegTraffic(traffic);
+      } else {
+        // Fallback: straight lines
+        setRouteGeometry(routeStops.map((s) => [s.lat, s.lng]));
+        setLegTraffic([]);
+      }
+    });
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeStops.map((s) => s.id).join(',')]);
+
+  // ─── Handlers ─────────────────────────────────────────────────
+
+  const addToRoute = useCallback((loc: ServiceLocation) => {
+    if (routeStops.length >= MAX_ROUTE_STOPS + 1) return; // +1 for depot
+    setRouteStops((prev) => [...prev, { ...loc }]);
+    setOptimized(false);
+  }, [routeStops.length]);
+
+  const removeFromRoute = useCallback((id: string) => {
+    if (id === 'depot') return;
+    setRouteStops((prev) => prev.filter((s) => s.id !== id));
+    setOptimized(false);
+  }, []);
 
   const handleDragStart = useCallback((e: React.DragEvent, idx: number) => {
+    if (idx === 0) return; // can't drag depot
     setDragIndex(idx);
     dragNode.current = e.currentTarget as HTMLDivElement;
     e.dataTransfer.effectAllowed = 'move';
@@ -131,6 +424,7 @@ export function RoutePlanning() {
 
   const handleDragOver = useCallback((e: React.DragEvent, idx: number) => {
     e.preventDefault();
+    if (idx === 0) return; // can't drop on depot
     e.dataTransfer.dropEffect = 'move';
     setOverIndex(idx);
   }, []);
@@ -138,14 +432,14 @@ export function RoutePlanning() {
   const handleDrop = useCallback(
     (e: React.DragEvent, dropIdx: number) => {
       e.preventDefault();
-      if (dragIndex === null || dragIndex === dropIdx) return;
-      const newStops = [...stops];
+      if (dragIndex === null || dragIndex === dropIdx || dropIdx === 0) return;
+      const newStops = [...routeStops];
       const [moved] = newStops.splice(dragIndex, 1);
       newStops.splice(dropIdx, 0, moved);
-      setStops(newStops);
+      setRouteStops(newStops);
       setOptimized(false);
     },
-    [dragIndex, stops],
+    [dragIndex, routeStops],
   );
 
   const handleDragEnd = useCallback(() => {
@@ -155,33 +449,59 @@ export function RoutePlanning() {
   }, []);
 
   const handleOptimize = () => {
-    setStops(nearestNeighborOptimize(stops));
+    setRouteStops(nearestNeighborOptimize(routeStops));
     setOptimized(true);
   };
 
-  const handleReset = () => {
-    setStops(EXAMPLE_STOPS);
+  const handleClearRoute = () => {
+    setRouteStops([{ ...DEPOT }]);
     setOptimized(false);
+    setRouteGeometry(null);
+    setLegTraffic([]);
   };
+
+  // Build segmented polylines for traffic coloring
+  const trafficSegments: { positions: [number, number][]; color: string }[] = [];
+  if (routeGeometry && routeGeometry.length > 1 && legTraffic.length > 0) {
+    // Split the geometry proportionally across legs
+    const numLegs = legTraffic.length;
+    const pointsPerLeg = Math.max(2, Math.floor(routeGeometry.length / numLegs));
+
+    for (let i = 0; i < numLegs; i++) {
+      const start = i * pointsPerLeg;
+      const end = i === numLegs - 1 ? routeGeometry.length : (i + 1) * pointsPerLeg + 1;
+      const segment = routeGeometry.slice(start, Math.min(end, routeGeometry.length));
+      if (segment.length >= 2) {
+        trafficSegments.push({
+          positions: segment,
+          color: TRAFFIC_COLORS[legTraffic[i]],
+        });
+      }
+    }
+  }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-secondary-500">Route Planning</h2>
-          <p className="text-sm text-gray-500">Drag and drop stops to reorder, or optimize automatically</p>
+          <p className="text-sm text-gray-500">
+            Build today&apos;s route from your {SERVICE_LOCATIONS.length} service locations (max {MAX_ROUTE_STOPS} stops)
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={handleReset}
+            onClick={handleClearRoute}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <RotateCcw className="w-4 h-4" />
-            Reset
+            Clear Route
           </button>
           <button
             onClick={handleOptimize}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-primary-500 rounded-lg hover:bg-primary-600 transition-colors"
+            disabled={routeStops.length < 3}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-primary-500 rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Zap className="w-4 h-4" />
             Optimize Route
@@ -190,29 +510,61 @@ export function RoutePlanning() {
       </div>
 
       {/* Route Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <div className="flex items-center gap-2 text-gray-500 mb-1">
             <MapPin className="w-4 h-4" />
             <span className="text-xs font-bold uppercase">Stops</span>
           </div>
-          <p className="text-2xl font-bold text-secondary-500">{stops.length}</p>
+          <p className="text-2xl font-bold text-secondary-500">
+            {stopsCount}
+            <span className="text-sm font-normal text-gray-400">/{MAX_ROUTE_STOPS}</span>
+          </p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <div className="flex items-center gap-2 text-gray-500 mb-1">
             <Truck className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase">Total Distance</span>
+            <span className="text-xs font-bold uppercase">Distance</span>
           </div>
-          <p className="text-2xl font-bold text-secondary-500">{dist.toFixed(1)} mi</p>
+          <p className="text-2xl font-bold text-secondary-500">
+            {displayDist.toFixed(1)} mi
+          </p>
+          {totalRouteDist > 0 && (
+            <p className="text-xs text-gray-400">via roads (OSRM)</p>
+          )}
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <div className="flex items-center gap-2 text-gray-500 mb-1">
             <Clock className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase">Est. Drive Time</span>
+            <span className="text-xs font-bold uppercase">Drive Time</span>
           </div>
           <p className="text-2xl font-bold text-secondary-500">
-            {Math.floor(estimatedTime / 60)}h {estimatedTime % 60}m
+            {displayTime >= 60 ? `${Math.floor(displayTime / 60)}h ${displayTime % 60}m` : `${displayTime}m`}
           </p>
+          {routeLoading && <p className="text-xs text-primary-500">Calculating...</p>}
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="flex items-center gap-2 text-gray-500 mb-1">
+            <AlertTriangle className="w-4 h-4" />
+            <span className="text-xs font-bold uppercase">Traffic</span>
+          </div>
+          {legTraffic.length > 0 ? (
+            <div className="flex items-center gap-2 mt-1">
+              {(['low', 'moderate', 'heavy'] as const).map((level) => {
+                const count = legTraffic.filter((t) => t === level).length;
+                if (count === 0) return null;
+                return (
+                  <span key={level} className="flex items-center gap-1 text-xs">
+                    <span className="w-2 h-2 rounded-full" style={{ background: TRAFFIC_COLORS[level] }} />
+                    {count}
+                  </span>
+                );
+              })}
+              <span className="text-xs text-gray-400 ml-1">(simulated)</span>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 mt-1">No route yet</p>
+          )}
         </div>
       </div>
 
@@ -220,51 +572,96 @@ export function RoutePlanning() {
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
           <Zap className="w-5 h-5 text-green-600" />
           <p className="text-sm text-green-700">
-            <strong>Route optimized!</strong> Using nearest-neighbor algorithm starting from your depot.
+            <strong>Route optimized!</strong> Nearest-neighbor algorithm from depot. Drag stops to fine-tune.
           </p>
         </div>
       )}
 
-      {/* Map + Stop List side by side */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Map */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden" style={{ minHeight: 500 }}>
+      {/* Main Layout: Map + Route + Pool */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Map (spans 2 cols) */}
+        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 overflow-hidden" style={{ minHeight: 550 }}>
           <MapContainer
             center={[32.2226, -110.9747]}
             zoom={11}
-            style={{ height: '100%', width: '100%', minHeight: 500 }}
+            style={{ height: '100%', width: '100%', minHeight: 550 }}
             scrollWheelZoom={true}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <FitBounds stops={stops} />
+            <FitBounds stops={routeStops} poolLocations={filteredPool} showPool={stopsCount === 0} />
 
-            {/* Route line */}
-            <Polyline
-              positions={routeLine}
-              pathOptions={{ color: '#f89020', weight: 3, opacity: 0.8, dashArray: '8, 6' }}
-            />
+            {/* Traffic-colored route segments */}
+            {trafficSegments.length > 0
+              ? trafficSegments.map((seg, idx) => (
+                  <Polyline
+                    key={`seg-${idx}`}
+                    positions={seg.positions}
+                    pathOptions={{ color: seg.color, weight: 4, opacity: 0.9 }}
+                  />
+                ))
+              : routeGeometry && (
+                  <Polyline
+                    positions={routeGeometry}
+                    pathOptions={{ color: '#f89020', weight: 3, opacity: 0.8, dashArray: '8, 6' }}
+                  />
+                )
+            }
 
-            {/* Stop markers */}
-            {stops.map((stop, idx) => (
+            {/* Pool location dots (unselected) */}
+            {filteredPool.map((loc) => (
+              <Marker
+                key={loc.id}
+                position={[loc.lat, loc.lng]}
+                icon={createPoolIcon(loc.type)}
+              >
+                <Popup>
+                  <div style={{ minWidth: 160 }}>
+                    <strong>{loc.name}</strong>
+                    <br />
+                    <span style={{ fontSize: 11, color: '#666' }}>{loc.address}</span>
+                    <br />
+                    <span style={{ fontSize: 11 }}>
+                      {loc.units} unit{loc.units !== 1 ? 's' : ''} &middot; {TYPE_LABELS[loc.type]} &middot; Last: {loc.lastService}
+                    </span>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+
+            {/* Route stop markers */}
+            {routeStops.map((stop, idx) => (
               <Marker
                 key={stop.id}
                 position={[stop.lat, stop.lng]}
                 icon={createNumberedIcon(idx, idx === 0)}
               >
                 <Popup>
-                  <div style={{ minWidth: 150 }}>
+                  <div style={{ minWidth: 160 }}>
                     <strong>{idx === 0 ? 'Depot' : `Stop ${idx}`}: {stop.name}</strong>
                     <br />
-                    <span style={{ fontSize: 12, color: '#666' }}>{stop.address}</span>
-                    {idx > 0 && (
+                    <span style={{ fontSize: 11, color: '#666' }}>{stop.address}</span>
+                    {stop.legDistance != null && stop.legDistance > 0 && (
                       <>
                         <br />
-                        <span style={{ fontSize: 12, color: '#f89020', fontWeight: 600 }}>
-                          {haversineDistance(stops[idx - 1].lat, stops[idx - 1].lng, stop.lat, stop.lng).toFixed(1)} mi from previous
+                        <span style={{ fontSize: 11, color: '#f89020', fontWeight: 600 }}>
+                          {(stop.legDistance / 1609.34).toFixed(1)} mi &middot;{' '}
+                          {Math.round((stop.legDuration || 0) / 60)} min from prev
                         </span>
+                        {stop.trafficLevel && (
+                          <>
+                            <br />
+                            <span style={{
+                              fontSize: 11,
+                              color: TRAFFIC_COLORS[stop.trafficLevel],
+                              fontWeight: 600,
+                            }}>
+                              Traffic: {stop.trafficLevel}
+                            </span>
+                          </>
+                        )}
                       </>
                     )}
                   </div>
@@ -274,54 +671,183 @@ export function RoutePlanning() {
           </MapContainer>
         </div>
 
-        {/* Stop List */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col" style={{ maxHeight: 500 }}>
-          <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-2 flex-shrink-0">
-            <Navigation className="w-4 h-4 text-primary-500" />
-            <h3 className="text-sm font-bold text-secondary-500 uppercase">Route Stops</h3>
-            <span className="text-xs text-gray-400 ml-auto">Drag to reorder</span>
-          </div>
-          <div className="divide-y divide-gray-100 overflow-y-auto flex-1">
-            {stops.map((stop, idx) => (
-              <div
-                key={stop.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, idx)}
-                onDragOver={(e) => handleDragOver(e, idx)}
-                onDrop={(e) => handleDrop(e, idx)}
-                onDragEnd={handleDragEnd}
-                className={`flex items-center gap-3 px-4 py-3 cursor-grab active:cursor-grabbing transition-colors ${
-                  overIndex === idx && dragIndex !== idx
-                    ? 'bg-primary-50 border-l-4 border-l-primary-500'
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
+        {/* Right Panel: Route Stops + Service Pool */}
+        <div className="space-y-4 flex flex-col" style={{ maxHeight: 550, minHeight: 550 }}>
+          {/* Today's Route */}
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col" style={{ flex: '1 1 50%', minHeight: 0 }}>
+            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-2 flex-shrink-0">
+              <Navigation className="w-4 h-4 text-primary-500" />
+              <h3 className="text-sm font-bold text-secondary-500 uppercase">Today&apos;s Route</h3>
+              <span className="text-xs text-gray-400 ml-auto">{stopsCount} stop{stopsCount !== 1 ? 's' : ''}</span>
+            </div>
+            <div className="divide-y divide-gray-100 overflow-y-auto flex-1">
+              {routeStops.map((stop, idx) => (
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                    idx === 0
-                      ? 'bg-secondary-500 text-white'
-                      : 'bg-primary-100 text-primary-700'
+                  key={stop.id}
+                  draggable={idx !== 0}
+                  onDragStart={(e) => handleDragStart(e, idx)}
+                  onDragOver={(e) => handleDragOver(e, idx)}
+                  onDrop={(e) => handleDrop(e, idx)}
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-center gap-2 px-3 py-2 transition-colors ${
+                    idx === 0 ? 'bg-secondary-50' : ''
+                  } ${
+                    overIndex === idx && dragIndex !== idx && idx !== 0
+                      ? 'bg-primary-50 border-l-4 border-l-primary-500'
+                      : idx !== 0 ? 'hover:bg-gray-50 cursor-grab active:cursor-grabbing' : ''
                   }`}
                 >
-                  {idx === 0 ? <MapPin className="w-3.5 h-3.5" /> : idx}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-secondary-500 truncate">{stop.name}</p>
-                  <p className="text-xs text-gray-400 truncate">{stop.address}</p>
-                </div>
-                {idx > 0 && (
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-xs font-bold text-gray-500">
-                      {haversineDistance(stops[idx - 1].lat, stops[idx - 1].lng, stop.lat, stop.lng).toFixed(1)} mi
-                    </p>
-                    <p className="text-xs text-gray-400">from prev</p>
+                  {idx !== 0 && <GripVertical className="w-3 h-3 text-gray-300 flex-shrink-0" />}
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
+                      idx === 0
+                        ? 'bg-secondary-500 text-white'
+                        : 'bg-primary-100 text-primary-700'
+                    }`}
+                  >
+                    {idx === 0 ? <MapPin className="w-3 h-3" /> : idx}
                   </div>
-                )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-secondary-500 truncate">{stop.name}</p>
+                    {idx > 0 && stop.legDistance != null && stop.legDistance > 0 && (
+                      <p className="text-[10px] text-gray-400">
+                        {(stop.legDistance / 1609.34).toFixed(1)} mi &middot; {Math.round((stop.legDuration || 0) / 60)} min
+                        {stop.trafficLevel && (
+                          <span style={{ color: TRAFFIC_COLORS[stop.trafficLevel] }}>
+                            {' '}&middot; {stop.trafficLevel}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                  {idx !== 0 && (
+                    <button
+                      onClick={() => removeFromRoute(stop.id)}
+                      className="p-1 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              {stopsCount === 0 && (
+                <div className="px-4 py-6 text-center text-xs text-gray-400">
+                  <MapPin className="w-6 h-6 mx-auto mb-2 text-gray-300" />
+                  Add stops from the service pool below
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Service Location Pool */}
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col" style={{ flex: '1 1 50%', minHeight: 0 }}>
+            <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex-shrink-0">
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin className="w-4 h-4 text-gray-500" />
+                <h3 className="text-sm font-bold text-secondary-500 uppercase">Service Locations</h3>
+                <span className="text-xs text-gray-400 ml-auto">{filteredPool.length} available</span>
               </div>
-            ))}
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search locations..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-7 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  />
+                </div>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`p-1.5 border rounded-lg transition-colors ${showFilters ? 'bg-primary-50 border-primary-300 text-primary-600' : 'border-gray-200 text-gray-400 hover:bg-gray-50'}`}
+                >
+                  <Filter className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              {showFilters && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {(['all', 'construction', 'event', 'park', 'commercial', 'residential', 'municipal', 'industrial'] as const).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setTypeFilter(t)}
+                      className={`px-2 py-0.5 text-[10px] font-medium rounded-full transition-colors ${
+                        typeFilter === t
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {t === 'all' ? 'All Types' : TYPE_LABELS[t]}
+                    </button>
+                  ))}
+                  <span className="w-px bg-gray-200 mx-1" />
+                  {(['all', 'high', 'medium', 'low'] as const).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPriorityFilter(p)}
+                      className={`px-2 py-0.5 text-[10px] font-medium rounded-full transition-colors ${
+                        priorityFilter === p
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {p === 'all' ? 'All Priority' : p.charAt(0).toUpperCase() + p.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="divide-y divide-gray-100 overflow-y-auto flex-1">
+              {filteredPool.map((loc) => (
+                <div
+                  key={loc.id}
+                  className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 transition-colors group"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-semibold text-secondary-500 truncate">{loc.name}</p>
+                      <span className={`text-[9px] font-bold ${PRIORITY_COLORS[loc.priority]}`}>
+                        {loc.priority === 'high' ? '!!!' : loc.priority === 'medium' ? '!!' : '!'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className={`text-[9px] px-1.5 py-0 rounded-full font-medium ${TYPE_COLORS[loc.type]}`}>
+                        {TYPE_LABELS[loc.type]}
+                      </span>
+                      <span className="text-[10px] text-gray-400">{loc.units} units</span>
+                      <span className="text-[10px] text-gray-400">&middot; {loc.lastService}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => addToRoute(loc)}
+                    disabled={routeStops.length >= MAX_ROUTE_STOPS + 1}
+                    className="p-1 text-gray-300 hover:text-primary-500 group-hover:text-primary-400 transition-colors disabled:opacity-30 flex-shrink-0"
+                    title="Add to route"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              {filteredPool.length === 0 && (
+                <div className="px-4 py-6 text-center text-xs text-gray-400">
+                  {searchQuery || typeFilter !== 'all' || priorityFilter !== 'all'
+                    ? 'No matching locations'
+                    : 'All locations are on the route'}
+                </div>
+              )}
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-6 text-xs text-gray-500">
+        <span className="font-semibold text-gray-600">Traffic:</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-1 rounded" style={{ background: TRAFFIC_COLORS.low }} /> Low</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-1 rounded" style={{ background: TRAFFIC_COLORS.moderate }} /> Moderate</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-1 rounded" style={{ background: TRAFFIC_COLORS.heavy }} /> Heavy</span>
+        <span className="text-gray-400 ml-2">(Traffic data is simulated)</span>
+        <span className="ml-auto text-gray-400">Route powered by OSRM (real road routing)</span>
       </div>
     </div>
   );
