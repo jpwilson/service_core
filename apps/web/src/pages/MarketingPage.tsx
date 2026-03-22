@@ -208,7 +208,7 @@ export function MarketingPage() {
       <header className="bg-secondary-500 text-white">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/costs')} className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+            <button onClick={() => navigate('/project-details')} className="p-2 rounded-lg hover:bg-white/10 transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
@@ -352,15 +352,33 @@ export function MarketingPage() {
                       </div>
                       <p className="text-sm text-gray-800 leading-relaxed">{ad.primaryText}</p>
                     </div>
-                    <div className="bg-gray-100 h-32 flex items-center justify-center text-gray-400 text-sm">
-                      [Ad Creative Image]
+                    <div
+                      className="h-40 flex items-center justify-center relative overflow-hidden"
+                      style={{
+                        background: ad.platform === 'instagram'
+                          ? 'linear-gradient(135deg, #f89020 0%, #0a1f44 100%)'
+                          : 'linear-gradient(135deg, #0a1f44 0%, #132d5e 60%, #f89020 100%)',
+                      }}
+                    >
+                      <div className="absolute inset-0 opacity-10" style={{
+                        backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23fff\' fill-opacity=\'0.15\'%3E%3Cpath d=\'M20 0l20 20-20 20L0 20z\'/%3E%3C/g%3E%3C/svg%3E")',
+                      }} />
+                      <div className="text-center z-10 px-6">
+                        <p className="text-white font-black text-lg leading-tight drop-shadow-lg">{ad.headline}</p>
+                        <p className="text-white/70 text-xs mt-1">{ad.description}</p>
+                      </div>
                     </div>
                     <div className="px-4 py-2 border-t border-gray-200">
                       <p className="font-bold text-sm text-secondary-500">{ad.headline}</p>
                       <p className="text-xs text-gray-500">{ad.description}</p>
                       <div className="mt-2 flex items-center justify-between">
                         <span className="text-xs text-gray-400">servicecore.com</span>
-                        <span className="text-xs font-bold text-primary-500 bg-primary-50 px-3 py-1 rounded">{ad.cta}</span>
+                        <button
+                          onClick={() => navigate('/login')}
+                          className="text-xs font-bold text-primary-500 bg-primary-50 px-3 py-1 rounded hover:bg-primary-100 transition-colors"
+                        >
+                          {ad.cta}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -429,7 +447,10 @@ export function MarketingPage() {
           <div className="mt-4 pt-4 border-t border-gray-100 text-center">
             <p className="text-sm text-gray-500">
               Quality threshold: <strong className="text-primary-500">7.0/10</strong> average to be considered publishable.
-              Ads below threshold are flagged for regeneration.
+              {publishableAds.length < ads.length
+                ? ` ${ads.length - publishableAds.length} ad${ads.length - publishableAds.length > 1 ? 's' : ''} below threshold — flagged for regeneration.`
+                : ' All current ads meet the publishable threshold.'
+              }
             </p>
           </div>
         </div>
