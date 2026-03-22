@@ -102,8 +102,8 @@ export function CostsSecurityPage() {
         {/* Experimental Tools */}
         <section>
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5 text-red-500" />
+            <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
+              <Zap className="w-5 h-5 text-amber-500" />
             </div>
             <div>
               <h2 className="text-2xl font-black text-secondary-500 uppercase">Experimental Tools</h2>
@@ -122,7 +122,7 @@ export function CostsSecurityPage() {
                   <div>
                     <div className="flex items-center gap-3 mb-1">
                       <h3 className="text-xl font-black uppercase">Sales & Marketing Pipeline</h3>
-                      <span className="bg-red-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full">Experimental</span>
+                      <span className="bg-amber-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full">Experimental</span>
                     </div>
                     <p className="text-sm text-white/70">
                       Autonomous ad generation engine for Facebook & Instagram. Generate, evaluate, and optimize ServiceCore ads with AI.
@@ -153,7 +153,7 @@ export function CostsSecurityPage() {
                   <div>
                     <div className="flex items-center gap-3 mb-1">
                       <h3 className="text-xl font-black uppercase">Data Visualization Graph</h3>
-                      <span className="bg-red-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full">Experimental</span>
+                      <span className="bg-amber-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full">Experimental</span>
                     </div>
                     <p className="text-sm text-white/70">
                       An experimental 3D graph of every data point in this project. Over time, unexpected relationships between different elements may be uncovered.

@@ -660,7 +660,7 @@ export function DataGraphPage() {
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-bold tracking-tight">ServiceCore Data Graph</h1>
-            <span className="bg-red-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full">
+            <span className="bg-amber-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full">
               Experimental
             </span>
           </div>
