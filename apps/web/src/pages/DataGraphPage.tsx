@@ -648,9 +648,9 @@ export function DataGraphPage() {
   const resetCameraRef = useRef<(() => void) | null>(null);
 
   return (
-    <div className="min-h-screen bg-gray-50 font-display flex flex-col">
+    <div className="h-screen font-display flex flex-col overflow-hidden" style={{ background: '#111827' }}>
       {/* Header */}
-      <header className="bg-secondary-500 text-white px-6 py-4 flex items-center gap-4 shadow-lg relative z-30">
+      <header className="bg-secondary-500/90 backdrop-blur text-white px-6 py-3 flex items-center gap-4 relative z-30 flex-shrink-0">
         <button
           onClick={() => navigate('/project-details')}
           className="p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -659,12 +659,12 @@ export function DataGraphPage() {
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold tracking-tight">ServiceCore Data Graph</h1>
-            <span className="bg-red-500 text-white text-xs font-bold uppercase px-3 py-1 rounded-full">
+            <h1 className="text-lg font-bold tracking-tight">ServiceCore Data Graph</h1>
+            <span className="bg-red-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full">
               Experimental
             </span>
           </div>
-          <p className="text-sm text-gray-300 mt-0.5">
+          <p className="text-xs text-gray-400">
             Interactive 3D force-directed graph of all operational data entities
           </p>
         </div>
@@ -678,11 +678,21 @@ export function DataGraphPage() {
         </button>
       </header>
 
-      {/* Canvas */}
-      <div className="flex-1 relative" style={{ minHeight: 600 }}>
+      {/* Canvas — fills all remaining space */}
+      <div className="flex-1 relative">
+        {/* Faint ServiceCore watermark */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 select-none">
+          <span
+            className="text-[8vw] font-black uppercase tracking-[0.2em]"
+            style={{ color: 'rgba(255,255,255,0.03)' }}
+          >
+            ServiceCore
+          </span>
+        </div>
+
         <Canvas
           camera={{ position: [0, 0, 40], fov: 60 }}
-          style={{ background: '#111827' }}
+          style={{ background: '#111827', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
           onPointerMissed={() => setSelectedId(null)}
         >
           <GraphScene
@@ -696,20 +706,18 @@ export function DataGraphPage() {
         {selectedId && <InfoPanel nodeId={selectedId} />}
       </div>
 
-      {/* Legend */}
-      <div className="bg-gray-900 border-t border-gray-700 px-6 py-3 flex flex-wrap items-center justify-center gap-4 relative z-30">
-        {LEGEND_ITEMS.map(item => (
-          <div key={item.label} className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-            <span className="text-gray-300 text-xs">{item.label}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Controls hint */}
-      <div className="bg-gray-950 px-6 py-2 text-center relative z-30">
-        <span className="text-gray-500 text-xs">
-          Drag: rotate &middot; Right-drag: pan &middot; Scroll: zoom &middot; Click: select &amp; highlight
+      {/* Legend + Controls — compact footer */}
+      <div className="bg-gray-900/90 backdrop-blur border-t border-gray-800 px-6 py-2 flex items-center justify-between relative z-30 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-3">
+          {LEGEND_ITEMS.map(item => (
+            <div key={item.label} className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+              <span className="text-gray-400 text-[11px]">{item.label}</span>
+            </div>
+          ))}
+        </div>
+        <span className="text-gray-600 text-[11px] hidden md:block">
+          Drag: rotate · Right-drag: pan · Scroll: zoom · Click: select
         </span>
       </div>
     </div>
