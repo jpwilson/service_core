@@ -1,13 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-
-type TooltipPosition = 'center' | 'bottom';
 
 interface TourStep {
   title: string;
   description: string;
-  position: TooltipPosition;
+  tabId?: string; // which sidebar button to point at (matches dashboardTab id)
   navigate?: () => void;
 }
 
@@ -18,6 +16,8 @@ interface GuidedTourProps {
 export function GuidedTour({ onClose }: GuidedTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [tooltipTop, setTooltipTop] = useState<number | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const { setDashboardTab } = useAppStore();
 
   const TOUR_STEPS: TourStep[] = [
@@ -25,104 +25,102 @@ export function GuidedTour({ onClose }: GuidedTourProps) {
       title: 'Welcome to ServiceCore!',
       description:
         'This tour walks you through every feature of your portable sanitation operations platform. Use arrow keys or buttons to navigate. Press Escape to exit anytime.',
-      position: 'center',
     },
     {
       title: 'Time Clock',
       description:
-        'Drivers and crew clock in/out here. Simple mode is a one-tap punch; Advanced mode adds project selection, GPS tracking, break logging, and mileage. Toggle between modes with the switch.',
-      position: 'bottom',
+        'Drivers and crew clock in/out here. Simple mode is a one-tap punch; Advanced mode adds project selection, GPS tracking, break logging, and mileage.',
+      tabId: 'timeclock',
       navigate: () => setDashboardTab('timeclock'),
     },
     {
       title: 'Operations Dashboard',
       description:
-        'Your command center. KPI cards show active employees, total hours, overtime, estimated payroll, and attendance rate. Below: predictive OT alerts and AI anomaly detection flag buddy punching, ghost shifts, and more.',
-      position: 'bottom',
+        'Your command center. KPI cards show active employees, total hours, overtime, estimated payroll, and attendance rate. Predictive OT alerts and AI anomaly detection below.',
+      tabId: 'overview',
       navigate: () => setDashboardTab('overview'),
     },
     {
       title: 'Crew Scheduling',
       description:
         'Weekly dispatch board. Assign drivers and service crew to job sites across a 7-day grid. Color-coded by site, with gap detection so no route goes unserviced.',
-      position: 'bottom',
+      tabId: 'scheduling',
       navigate: () => setDashboardTab('scheduling'),
     },
     {
       title: 'Route Planning',
       description:
-        'Build daily service routes from 50+ locations. Search and filter by type (construction, events, parks) and priority. Routes use real road data via OSRM with drive times and simulated traffic.',
-      position: 'bottom',
+        'Build daily service routes from 50+ locations. Search and filter by type and priority. Routes use real road data via OSRM with drive times and simulated traffic.',
+      tabId: 'routes',
       navigate: () => setDashboardTab('routes'),
-    },
-    {
-      title: 'Equipment Tracking',
-      description:
-        'Track every porta-john, hand wash station, and restroom trailer. Monitor condition, next service dates, and deployment status. 20 units across all your job sites.',
-      position: 'bottom',
-      navigate: () => setDashboardTab('equipment'),
-    },
-    {
-      title: 'Customer Management',
-      description:
-        'Your CRM for construction companies, event planners, and municipal contracts. View service history, job sites, and contact details for each customer.',
-      position: 'bottom',
-      navigate: () => setDashboardTab('customers'),
-    },
-    {
-      title: 'Timesheet Approvals',
-      description:
-        'Managers review, approve, or reject submitted timesheets. Each entry shows hours worked, overtime flags, late arrivals, and employee notes. Bulk approve for speed.',
-      position: 'bottom',
-      navigate: () => setDashboardTab('approvals'),
     },
     {
       title: 'Analytics',
       description:
         'Five reporting views: Hours (daily/weekly trends), Attendance (on-time rates), Labor Costs (by project), Projects (budget tracking), and Employees (individual performance).',
-      position: 'bottom',
+      tabId: 'hours',
       navigate: () => setDashboardTab('hours'),
+    },
+    {
+      title: 'Timesheet Approvals',
+      description:
+        'Managers review, approve, or reject submitted timesheets. Each entry shows hours worked, overtime flags, late arrivals, and employee notes. Bulk approve for speed.',
+      tabId: 'approvals',
+      navigate: () => setDashboardTab('approvals'),
+    },
+    {
+      title: 'Customer Management',
+      description:
+        'Your CRM for construction companies, event planners, and municipal contracts. View service history, job sites, and contact details for each customer.',
+      tabId: 'customers',
+      navigate: () => setDashboardTab('customers'),
+    },
+    {
+      title: 'Equipment Tracking',
+      description:
+        'Track every porta-john, hand wash station, and restroom trailer. Monitor condition, next service dates, and deployment status across all job sites.',
+      tabId: 'equipment',
+      navigate: () => setDashboardTab('equipment'),
     },
     {
       title: 'Invoicing',
       description:
-        'Generate invoices from time entries per customer. Add line items, apply tax (configurable rate), and download as PDF. Track invoice status and payment history.',
-      position: 'bottom',
+        'Generate invoices from time entries per customer. Add line items, apply tax, and download as PDF. Track invoice status and payment history.',
+      tabId: 'invoices',
       navigate: () => setDashboardTab('invoices'),
-    },
-    {
-      title: 'Accounting Export',
-      description:
-        'Export formatted data for QuickBooks, Xero, or ADP. One-click CSV generation with sync status tracking and export history.',
-      position: 'bottom',
-      navigate: () => setDashboardTab('quickbooks'),
     },
     {
       title: 'Data Import',
       description:
         'Drag and drop to import from Excel, CSV/Kronos, PDF, or scanned paper timesheets (OCR). Auto-detects format and shows import history with outcomes.',
-      position: 'bottom',
+      tabId: 'import',
       navigate: () => setDashboardTab('import'),
+    },
+    {
+      title: 'Accounting Export',
+      description:
+        'Export formatted data for QuickBooks, Xero, or ADP. One-click CSV generation with sync status tracking and export history.',
+      tabId: 'quickbooks',
+      navigate: () => setDashboardTab('quickbooks'),
     },
     {
       title: 'Audit Log',
       description:
         'Complete activity trail — approvals, edits, system flags, and imports. Filter by event type and search to track who changed what and when.',
-      position: 'bottom',
+      tabId: 'audit',
       navigate: () => setDashboardTab('audit'),
     },
     {
       title: 'Settings',
       description:
-        'Configure pay periods (weekly, bi-weekly, semi-monthly), overtime rules (daily/weekly thresholds, multipliers), automatic break deductions, and department management.',
-      position: 'bottom',
+        'Configure pay periods (weekly, bi-weekly, semi-monthly), overtime rules (daily/weekly thresholds, multipliers), automatic break deductions, and departments.',
+      tabId: 'settings',
       navigate: () => setDashboardTab('settings'),
     },
     {
       title: 'Tour Complete!',
       description:
-        "You've explored all the features! Use the AI chatbot (bottom-right bubble) to ask questions about your data, or start exploring on your own. Click the help button anytime to restart this tour.",
-      position: 'center',
+        "You've explored all the features! Use the AI chatbot (bottom-right bubble) to ask questions, or start exploring on your own. Click the help button anytime to restart.",
       navigate: () => setDashboardTab('overview'),
     },
   ];
@@ -131,6 +129,51 @@ export function GuidedTour({ onClose }: GuidedTourProps) {
   const step = TOUR_STEPS[currentStep];
   const isFirst = currentStep === 0;
   const isLast = currentStep === totalSteps - 1;
+  const isCenter = !step.tabId;
+
+  // Find the sidebar button position for the current step
+  const updateTooltipPosition = useCallback(() => {
+    if (!step.tabId) {
+      setTooltipTop(null);
+      return;
+    }
+
+    // Find the active sidebar button by looking for the highlighted one
+    const sidebar = document.querySelector('aside');
+    if (!sidebar) {
+      setTooltipTop(null);
+      return;
+    }
+
+    const buttons = sidebar.querySelectorAll('button');
+    let targetButton: Element | null = null;
+
+    for (const btn of buttons) {
+      // The active button has bg-white/10 class
+      if (btn.classList.contains('bg-white/10') || btn.className.includes('bg-white/10')) {
+        targetButton = btn;
+        break;
+      }
+    }
+
+    if (targetButton) {
+      const rect = targetButton.getBoundingClientRect();
+      const tooltipHeight = tooltipRef.current?.offsetHeight || 300;
+      // Center the tooltip vertically with the sidebar button
+      let top = rect.top + rect.height / 2 - tooltipHeight / 2;
+      // Clamp so it doesn't go off screen
+      top = Math.max(16, Math.min(top, window.innerHeight - tooltipHeight - 16));
+      setTooltipTop(top);
+    } else {
+      setTooltipTop(null);
+    }
+  }, [step.tabId]);
+
+  useEffect(() => {
+    // Wait for navigation to render, then position
+    const timer = setTimeout(updateTooltipPosition, 200);
+    return () => clearTimeout(timer);
+  }, [currentStep, updateTooltipPosition]);
 
   const goToStep = useCallback(
     (index: number) => {
@@ -146,7 +189,7 @@ export function GuidedTour({ onClose }: GuidedTourProps) {
       setTimeout(() => {
         setCurrentStep(index);
         setIsTransitioning(false);
-      }, 150);
+      }, 200);
     },
     [totalSteps, isTransitioning, TOUR_STEPS]
   );
@@ -193,7 +236,9 @@ export function GuidedTour({ onClose }: GuidedTourProps) {
   }, [next, prev, onClose]);
 
   const progressPercent = ((currentStep + 1) / totalSteps) * 100;
-  const isCenter = step.position === 'center';
+
+  // Sidebar is 256px (w-64). Position tooltip just to the right of it.
+  const sidebarWidth = 256;
 
   return (
     <div className="fixed inset-0 z-[9998]" role="dialog" aria-modal="true" aria-label="Guided tour">
@@ -203,10 +248,29 @@ export function GuidedTour({ onClose }: GuidedTourProps) {
       />
 
       <div
-        className={`absolute z-[9999] left-1/2 -translate-x-1/2 w-full max-w-lg px-4 transition-all duration-300 ease-out ${
+        ref={tooltipRef}
+        className={`absolute z-[9999] w-full max-w-md transition-all duration-300 ease-out ${
           isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-        } ${isCenter ? 'top-1/2 -translate-y-1/2' : 'bottom-8'}`}
+        }`}
+        style={
+          isCenter
+            ? { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+            : {
+                top: tooltipTop != null ? `${tooltipTop}px` : '50%',
+                left: `${sidebarWidth + 24}px`,
+                ...(tooltipTop == null ? { transform: 'translateY(-50%)' } : {}),
+              }
+        }
       >
+        {/* Left-pointing triangle for sidebar-anchored steps */}
+        {!isCenter && (
+          <div
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[6px]"
+          >
+            <div className="w-3 h-3 bg-white border-l border-b border-gray-200/50 rotate-45 shadow-sm" />
+          </div>
+        )}
+
         <div className="bg-white rounded-xl shadow-2xl border border-gray-200/50 overflow-hidden">
           <div className="flex items-center justify-between px-6 py-3 bg-secondary-500">
             <span className="text-xs font-bold text-white/80 uppercase tracking-wider">
@@ -232,17 +296,6 @@ export function GuidedTour({ onClose }: GuidedTourProps) {
             <h3 className="text-lg font-bold text-secondary-500 mb-2">{step.title}</h3>
             <p className="text-sm text-gray-600 leading-relaxed">{step.description}</p>
           </div>
-
-          {!isCenter && (
-            <div className="px-6 pb-2">
-              <div className="flex items-center gap-2 text-xs text-primary-500 font-medium">
-                <svg className="w-4 h-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
-                Look at the page content above
-              </div>
-            </div>
-          )}
 
           <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
             <button
@@ -286,12 +339,6 @@ export function GuidedTour({ onClose }: GuidedTourProps) {
             </button>
           </div>
         </div>
-
-        {!isCenter && (
-          <div className="flex justify-center -mt-px">
-            <div className="w-3 h-3 bg-white border-b border-r border-gray-200/50 rotate-45 transform translate-y-[-6px]" />
-          </div>
-        )}
       </div>
     </div>
   );
