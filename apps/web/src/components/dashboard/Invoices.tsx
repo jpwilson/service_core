@@ -12,6 +12,7 @@ import {
   Receipt,
   TrendingUp,
 } from 'lucide-react';
+import jsPDF from 'jspdf';
 import {
   mockTimeEntries,
   mockEmployees,
@@ -189,7 +190,47 @@ export function Invoices() {
   };
 
   const handleDownloadPdf = () => {
-    addToast('Invoice PDF downloaded successfully', 'success');
+    if (!selectedInvoice) return;
+    const doc = new jsPDF();
+    doc.setFontSize(24);
+    doc.setTextColor(10, 31, 68);
+    doc.text('INVOICE', 20, 30);
+    doc.setFontSize(12);
+    doc.setTextColor(60, 60, 60);
+    doc.text(`Invoice #: ${selectedInvoice.invoiceNumber}`, 20, 45);
+    doc.text(`Date: ${format(selectedInvoice.date, 'MMM d, yyyy')}`, 20, 52);
+    doc.text(`Due: ${format(selectedInvoice.dueDate, 'MMM d, yyyy')}`, 20, 59);
+    doc.text(`Customer: ${selectedInvoice.customer.name}`, 20, 72);
+    doc.text(`Attn: ${selectedInvoice.customer.contactName}`, 20, 79);
+    // Line items header
+    let y = 95;
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Employee', 20, y);
+    doc.text('Hours', 120, y);
+    doc.text('Rate', 145, y);
+    doc.text('Amount', 170, y);
+    y += 2;
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, y, 195, y);
+    y += 6;
+    doc.setTextColor(30, 30, 30);
+    selectedInvoice.lineItems.forEach((item) => {
+      doc.text(item.employeeName, 20, y);
+      doc.text(item.hours.toString(), 120, y);
+      doc.text(`$${item.rate.toFixed(2)}`, 145, y);
+      doc.text(`$${item.total.toFixed(2)}`, 170, y);
+      y += 7;
+    });
+    y += 10;
+    doc.setFontSize(12);
+    doc.text(`Subtotal: $${selectedInvoice.subtotal.toFixed(2)}`, 140, y);
+    doc.text(`Tax (8.5%): $${selectedInvoice.tax.toFixed(2)}`, 140, y + 8);
+    doc.setFontSize(14);
+    doc.setTextColor(10, 31, 68);
+    doc.text(`Total: $${selectedInvoice.total.toFixed(2)}`, 140, y + 18);
+    doc.save(`invoice-${selectedInvoice.invoiceNumber}.pdf`);
+    addToast('Invoice PDF downloaded', 'success');
   };
 
   const handleSendEmail = () => {

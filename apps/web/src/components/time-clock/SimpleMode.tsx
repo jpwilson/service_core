@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Timer, TimerOff, MapPin, Briefcase } from 'lucide-react';
+import { Timer, TimerOff, MapPin, Briefcase, Clock } from 'lucide-react';
 import type { Employee } from '@servicecore/shared';
-import { formatHoursMinutes, mockProjects } from '@servicecore/shared';
+import { formatHoursMinutes, mockProjects, calculateHoursWorked } from '@servicecore/shared';
 import { useAppStore } from '../../store/useAppStore';
 
 interface SimpleModeProps {
@@ -16,6 +16,10 @@ export default function SimpleMode({ employee }: SimpleModeProps) {
     clockIn,
     clockOut,
     addToast,
+    demoMode,
+    demoSpeedMultiplier,
+    setClockOutNotes,
+    sessionEntries,
   } = useAppStore();
 
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -26,31 +30,41 @@ export default function SimpleMode({ employee }: SimpleModeProps) {
     return () => clearInterval(interval);
   }, []);
 
+  // Save notes to store on change
+  useEffect(() => {
+    setClockOutNotes(notes);
+  }, [notes, setClockOutNotes]);
+
   const hoursToday = useMemo(() => {
     if (!isClockedIn || !clockInTime) return 0;
-    return (Date.now() - new Date(clockInTime).getTime()) / 3600000;
-  }, [isClockedIn, clockInTime, currentTime]);
+    const multiplier = demoMode ? demoSpeedMultiplier : 1;
+    return ((Date.now() - new Date(clockInTime).getTime()) * multiplier) / 3600000;
+  }, [isClockedIn, clockInTime, currentTime, demoMode, demoSpeedMultiplier]);
 
   const elapsedString = useMemo(() => {
     if (!isClockedIn || !clockInTime) return '';
-    const totalSeconds = Math.floor((Date.now() - new Date(clockInTime).getTime()) / 1000);
+    const multiplier = demoMode ? demoSpeedMultiplier : 1;
+    const totalSeconds = Math.floor(((Date.now() - new Date(clockInTime).getTime()) * multiplier) / 1000);
     const h = Math.floor(totalSeconds / 3600);
     const m = Math.floor((totalSeconds % 3600) / 60);
     const s = totalSeconds % 60;
     return `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
-  }, [isClockedIn, clockInTime, currentTime]);
+  }, [isClockedIn, clockInTime, currentTime, demoMode, demoSpeedMultiplier]);
 
   const project = clockInProject
     ? mockProjects.find((p) => p.id === clockInProject)
     : null;
 
   const handleClockIn = () => {
-    clockIn();
+    // Auto-assign first active project if none selected
+    const activeProject = mockProjects.find((p) => p.isActive);
+    clockIn(activeProject?.id);
     addToast(`Clocked in at ${new Date().toLocaleTimeString()}`, 'success');
   };
 
   const handleClockOut = () => {
     clockOut();
+    setNotes('');
     addToast(`Clocked out at ${new Date().toLocaleTimeString()} - ${formatHoursMinutes(hoursToday)} worked`, 'success');
   };
 
@@ -66,6 +80,36 @@ export default function SimpleMode({ employee }: SimpleModeProps) {
     day: 'numeric',
     year: 'numeric',
   });
+
+  // Recent session entries (last 3)
+  const recentEntries = useMemo(() => {
+    return [...sessionEntries]
+      .filter((e) => e.clockOut)
+      .sort((a, b) => new Date(b.clockIn).getTime() - new Date(a.clockIn).getTime())
+      .slice(0, 3)
+      .map((entry) => {
+        const proj = entry.projectId
+          ? mockProjects.find((p) => p.id === entry.projectId)
+          : null;
+        const hours = calculateHoursWorked(entry.clockIn, entry.clockOut, entry.breaks);
+        const date = new Date(entry.clockIn).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        });
+        const timeIn = new Date(entry.clockIn).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        });
+        return {
+          id: entry.id,
+          projectName: proj?.name ?? 'Unassigned',
+          date,
+          hours,
+          timeIn,
+        };
+      });
+  }, [sessionEntries]);
 
   return (
     <div className="max-w-md mx-auto px-4 py-6 space-y-5">
@@ -101,10 +145,10 @@ export default function SimpleMode({ employee }: SimpleModeProps) {
         >
           {isClockedIn ? (
             <>
-              <TimerOff className="w-10 h-10 mb-2" />
+              <TimerOff className="w-10 h-10 mb-1" />
               <span>CLOCK OUT</span>
-              <span className="text-sm font-normal mt-1 opacity-80 tabular-nums">
-                {elapsedString} elapsed
+              <span className="text-lg font-bold mt-1 tabular-nums">
+                {elapsedString}
               </span>
             </>
           ) : (
@@ -171,6 +215,29 @@ export default function SimpleMode({ employee }: SimpleModeProps) {
           className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-secondary-500 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
         />
       </div>
+
+      {/* Recent Entries */}
+      {recentEntries.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="w-4 h-4 text-primary-500" />
+            <span className="text-xs font-semibold text-secondary-500 uppercase tracking-wide">Recent Entries</span>
+          </div>
+          <div className="space-y-1.5">
+            {recentEntries.map((entry) => (
+              <div key={entry.id} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-b-0">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-secondary-500 truncate">{entry.projectName}</p>
+                  <p className="text-[10px] text-gray-400">{entry.date} at {entry.timeIn}</p>
+                </div>
+                <span className="text-xs font-semibold text-primary-500 tabular-nums ml-2">
+                  {formatHoursMinutes(entry.hours)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   Briefcase,
   Clock,
   BarChart3,
+  AlertTriangle,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import type { Employee, TimeEntry, BreakType } from '@servicecore/shared';
@@ -27,52 +28,84 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
     clockIn,
     clockOut,
     addToast,
+    demoMode,
+    demoSpeedMultiplier,
+    isOnBreak,
+    breakStart,
+    breakType,
+    totalBreakSeconds,
+    startBreak,
+    endBreak,
+    setClockOutNotes,
+    setClockOutMileage,
+    sessionEntries,
   } = useAppStore();
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedProject, setSelectedProject] = useState<string>(clockInProject ?? '');
-  const [isOnBreak, setIsOnBreak] = useState(false);
-  const [breakType, setBreakType] = useState<BreakType>('lunch');
-  const [breakStart, setBreakStart] = useState<Date | null>(null);
-  const [breakElapsed, setBreakElapsed] = useState(0);
+  const [localBreakType, setLocalBreakType] = useState<BreakType>(breakType || 'lunch');
   const [mileage, setMileage] = useState('');
   const [notes, setNotes] = useState('');
+  const [noProjectWarning, setNoProjectWarning] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
 
+  // Save notes/mileage to store on change
   useEffect(() => {
-    if (!isOnBreak || !breakStart) return;
-    const interval = setInterval(() => {
-      setBreakElapsed(Math.floor((Date.now() - breakStart.getTime()) / 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isOnBreak, breakStart]);
+    setClockOutNotes(notes);
+  }, [notes, setClockOutNotes]);
+
+  useEffect(() => {
+    setClockOutMileage(parseFloat(mileage) || 0);
+  }, [mileage, setClockOutMileage]);
+
+  // Current break elapsed
+  const currentBreakElapsed = useMemo(() => {
+    if (!isOnBreak || !breakStart) return 0;
+    return Math.floor((Date.now() - new Date(breakStart).getTime()) / 1000);
+  }, [isOnBreak, breakStart, currentTime]);
+
+  // Break exceeds 30 minutes warning
+  const breakWarningMinutes = useMemo(() => {
+    if (!isOnBreak) return 0;
+    return Math.floor(currentBreakElapsed / 60);
+  }, [isOnBreak, currentBreakElapsed]);
 
   const hoursToday = useMemo(() => {
     if (!isClockedIn || !clockInTime) return 0;
-    return (Date.now() - new Date(clockInTime).getTime()) / 3600000;
-  }, [isClockedIn, clockInTime, currentTime]);
+    const multiplier = demoMode ? demoSpeedMultiplier : 1;
+    const rawElapsed = ((Date.now() - new Date(clockInTime).getTime()) * multiplier) / 1000;
+    const netSeconds = Math.max(0, rawElapsed - totalBreakSeconds - currentBreakElapsed);
+    return netSeconds / 3600;
+  }, [isClockedIn, clockInTime, currentTime, demoMode, demoSpeedMultiplier, totalBreakSeconds, currentBreakElapsed]);
 
   const elapsedString = useMemo(() => {
     if (!isClockedIn || !clockInTime) return '';
-    const totalSeconds = Math.floor((Date.now() - new Date(clockInTime).getTime()) / 1000);
-    const h = Math.floor(totalSeconds / 3600);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    const s = totalSeconds % 60;
+    const multiplier = demoMode ? demoSpeedMultiplier : 1;
+    const rawElapsed = Math.floor(((Date.now() - new Date(clockInTime).getTime()) * multiplier) / 1000);
+    const netSeconds = Math.max(0, rawElapsed - totalBreakSeconds - currentBreakElapsed);
+    const h = Math.floor(netSeconds / 3600);
+    const m = Math.floor((netSeconds % 3600) / 60);
+    const s = Math.floor(netSeconds % 60);
     return `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
-  }, [isClockedIn, clockInTime, currentTime]);
+  }, [isClockedIn, clockInTime, currentTime, demoMode, demoSpeedMultiplier, totalBreakSeconds, currentBreakElapsed]);
 
   const handleClockIn = () => {
+    if (!selectedProject) {
+      setNoProjectWarning(true);
+    }
     clockIn(selectedProject || undefined);
     addToast(`Clocked in at ${new Date().toLocaleTimeString()}`, 'success');
   };
 
   const handleClockOut = () => {
     clockOut();
-    setIsOnBreak(false);
+    setNotes('');
+    setMileage('');
+    setNoProjectWarning(false);
     addToast(`Clocked out - ${formatHoursMinutes(hoursToday)} worked`, 'success');
   };
 
@@ -98,9 +131,10 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
     ? mockProjects.find((p) => p.id === clockInProject)
     : null;
 
-  // Recent timesheet entries (last 5)
+  // Recent time entries: combine mock entries with session entries, sort by date, show last 5
   const recentEntries = useMemo(() => {
-    return [...entries]
+    const allEntries = [...entries, ...sessionEntries];
+    return allEntries
       .filter((e) => e.clockOut)
       .sort((a, b) => new Date(b.clockIn).getTime() - new Date(a.clockIn).getTime())
       .slice(0, 5)
@@ -118,7 +152,7 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
           hours,
         };
       });
-  }, [entries]);
+  }, [entries, sessionEntries]);
 
   // Weekly hours for bar chart
   const weeklyData = useMemo(() => {
@@ -128,16 +162,18 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
     startOfWeek.setDate(now.getDate() - now.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
 
+    const allEntries = [...entries, ...sessionEntries];
+
     const data = days.map((day, i) => {
       const dayDate = new Date(startOfWeek);
       dayDate.setDate(startOfWeek.getDate() + i);
       const dayEnd = new Date(dayDate);
       dayEnd.setDate(dayDate.getDate() + 1);
 
-      const dayHours = entries
+      const dayHours = allEntries
         .filter((e) => {
-          const clockIn = new Date(e.clockIn);
-          return clockIn >= dayDate && clockIn < dayEnd && e.clockOut;
+          const clockInDate = new Date(e.clockIn);
+          return clockInDate >= dayDate && clockInDate < dayEnd && e.clockOut;
         })
         .reduce((sum, e) => sum + calculateHoursWorked(e.clockIn, e.clockOut, e.breaks), 0);
 
@@ -145,7 +181,7 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
     });
 
     return data;
-  }, [entries]);
+  }, [entries, sessionEntries]);
 
   return (
     <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
@@ -160,6 +196,16 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
           <p className="text-xs text-gray-400">{employee.role} &middot; {employee.department}</p>
         </div>
       </div>
+
+      {/* Break warning banner */}
+      {isOnBreak && breakWarningMinutes >= 30 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+          <span className="text-xs font-medium text-amber-700">
+            Break has been running for {breakWarningMinutes} minutes
+          </span>
+        </div>
+      )}
 
       {/* Clock Button - centered, medium */}
       <div className="flex justify-center">
@@ -198,8 +244,8 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
         <div className="bg-white rounded-lg border border-gray-200 p-2.5">
           <p className="text-[10px] text-gray-500 uppercase tracking-wide">Status</p>
           <div className="flex items-center gap-1.5 mt-1">
-            <span className={`w-2 h-2 rounded-full ${isClockedIn ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-            <span className="text-xs font-semibold text-secondary-500">{isClockedIn ? 'On Duty' : 'Off Duty'}</span>
+            <span className={`w-2 h-2 rounded-full ${isClockedIn ? (isOnBreak ? 'bg-amber-500 animate-pulse' : 'bg-green-500 animate-pulse') : 'bg-gray-400'}`} />
+            <span className="text-xs font-semibold text-secondary-500">{isClockedIn ? (isOnBreak ? 'Break' : 'On Duty') : 'Off Duty'}</span>
           </div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-2.5">
@@ -225,16 +271,18 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
         <select
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
-          disabled={isClockedIn}
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-secondary-500 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-60"
+          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-secondary-500 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <option value="">Select a project...</option>
           {mockProjects.filter((p) => p.isActive).map((p) => (
             <option key={p.id} value={p.id}>{p.name} - {p.client}</option>
           ))}
         </select>
+        {noProjectWarning && !selectedProject && !isClockedIn && (
+          <p className="text-xs text-orange-500 mt-1.5 font-medium">No project selected</p>
+        )}
         {project && isClockedIn && (
-          <p className="text-xs text-primary-600 mt-1.5">Active: {project.name}</p>
+          <p className="text-xs text-primary-600 mt-1.5">Started with: {project.name}</p>
         )}
       </div>
 
@@ -250,13 +298,9 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
             <button
               onClick={() => {
                 if (isOnBreak) {
-                  setIsOnBreak(false);
-                  setBreakStart(null);
-                  setBreakElapsed(0);
+                  endBreak();
                 } else {
-                  setIsOnBreak(true);
-                  setBreakStart(new Date());
-                  setBreakElapsed(0);
+                  startBreak(localBreakType);
                 }
               }}
               disabled={!isClockedIn}
@@ -275,9 +319,9 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
             {(['lunch', 'rest', 'other'] as BreakType[]).map((bt) => (
               <button
                 key={bt}
-                onClick={() => setBreakType(bt)}
+                onClick={() => setLocalBreakType(bt)}
                 className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                  breakType === bt ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600'
+                  localBreakType === bt ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600'
                 }`}
               >
                 {bt}
@@ -285,7 +329,10 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
             ))}
           </div>
           {isOnBreak && (
-            <p className="text-lg font-bold text-primary-500 tabular-nums text-center">{formatBreakTime(breakElapsed)}</p>
+            <p className="text-lg font-bold text-primary-500 tabular-nums text-center">{formatBreakTime(currentBreakElapsed)}</p>
+          )}
+          {totalBreakSeconds > 0 && !isOnBreak && (
+            <p className="text-[10px] text-gray-400 text-center">Total break: {formatBreakTime(totalBreakSeconds)}</p>
           )}
         </div>
 
@@ -329,11 +376,11 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
         </div>
       </div>
 
-      {/* Recent Timesheet */}
+      {/* Recent Time Entries */}
       <div className="bg-white rounded-xl border border-gray-200 p-3">
         <div className="flex items-center gap-2 mb-2">
           <Clock className="w-4 h-4 text-primary-500" />
-          <span className="text-xs font-semibold text-secondary-500 uppercase tracking-wide">Recent Timesheet</span>
+          <span className="text-xs font-semibold text-secondary-500 uppercase tracking-wide">Recent Time Entries</span>
         </div>
         {recentEntries.length > 0 ? (
           <div className="space-y-1.5">

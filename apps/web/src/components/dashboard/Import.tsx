@@ -26,7 +26,7 @@ import {
   mockEmployees,
   mockProjects,
 } from '@servicecore/shared';
-import type { ParsedTimesheetRow, OcrParsedEntry } from '@servicecore/shared';
+import type { ParsedTimesheetRow, OcrParsedEntry, TimeEntry } from '@servicecore/shared';
 import { useAppStore } from '../../store/useAppStore';
 
 // Configure PDF.js worker
@@ -175,7 +175,7 @@ function getFileType(file: File): 'excel' | 'csv' | 'pdf' | 'image' {
 }
 
 export function Import() {
-  const { addToast } = useAppStore();
+  const { addToast, addSessionEntries } = useAppStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Shared state
@@ -475,6 +475,22 @@ export function Import() {
                   totalHours: Math.round(totalHrs),
                   dateRange: dates.length ? `${dates[0]} - ${dates[dates.length - 1]}` : 'N/A',
                 }, ...prev]);
+                // Add parsed rows as TimeEntry objects to session store
+                const newEntries: TimeEntry[] = excelRows.map((row, i) => ({
+                  id: `te-import-${Date.now()}-${i}`,
+                  employeeId: mockEmployees.find(e => `${e.firstName} ${e.lastName}` === row.employeeName)?.id || 'emp-001',
+                  projectId: mockProjects.find(p => p.name === row.project)?.id || null,
+                  clockIn: row.clockIn ? new Date(`${row.date} ${row.clockIn}`).toISOString() : new Date(row.date).toISOString(),
+                  clockOut: row.clockOut ? new Date(`${row.date} ${row.clockOut}`).toISOString() : new Date(row.date).toISOString(),
+                  breaks: [],
+                  status: 'pending' as const,
+                  notes: row.notes || '',
+                  location: 'Imported',
+                  mileage: null,
+                  flags: [],
+                  isManualEdit: false,
+                }));
+                addSessionEntries(newEntries);
                 addToast(`${excelRows.length} entries imported from Excel`, 'success'); resetAll();
               }}
               className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-white bg-primary-500 rounded-lg hover:bg-primary-600">
@@ -552,6 +568,22 @@ export function Import() {
                   totalHours: Math.round(totalHrs),
                   dateRange: dates.length ? `${dates[0]} - ${dates[dates.length - 1]}` : 'N/A',
                 }, ...prev]);
+                // Add parsed CSV rows as TimeEntry objects to session store
+                const newEntries: TimeEntry[] = csvRows.map((row, i) => ({
+                  id: `te-import-${Date.now()}-${i}`,
+                  employeeId: mockEmployees.find(e => `${e.firstName} ${e.lastName}` === row.employeeName)?.id || 'emp-001',
+                  projectId: null,
+                  clockIn: row.date && row.inPunch ? new Date(`${row.date} ${row.inPunch}`).toISOString() : new Date().toISOString(),
+                  clockOut: row.date && row.outPunch ? new Date(`${row.date} ${row.outPunch}`).toISOString() : new Date().toISOString(),
+                  breaks: [],
+                  status: 'pending' as const,
+                  notes: row.comments || '',
+                  location: 'Imported',
+                  mileage: null,
+                  flags: [],
+                  isManualEdit: false,
+                }));
+                addSessionEntries(newEntries);
                 addToast(`${csvRows.length} entries imported from CSV`, 'success'); resetAll();
               }}
               className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-white bg-primary-500 rounded-lg hover:bg-primary-600">
@@ -666,6 +698,22 @@ export function Import() {
                     totalHours: Math.round(totalHrs),
                     dateRange: dates.length ? `${dates[0]} - ${dates[dates.length - 1]}` : 'N/A',
                   }, ...prev]);
+                  // Add parsed OCR entries as TimeEntry objects to session store
+                  const newEntries: TimeEntry[] = ocrEntries.map((entry, i) => ({
+                    id: `te-import-${Date.now()}-${i}`,
+                    employeeId: mockEmployees.find(e => `${e.firstName} ${e.lastName}` === entry.employeeName)?.id || 'emp-001',
+                    projectId: mockProjects.find(p => p.name === entry.project)?.id || null,
+                    clockIn: entry.date && entry.clockIn ? new Date(`${entry.date} ${entry.clockIn}`).toISOString() : new Date().toISOString(),
+                    clockOut: entry.date && entry.clockOut ? new Date(`${entry.date} ${entry.clockOut}`).toISOString() : new Date().toISOString(),
+                    breaks: [],
+                    status: 'pending' as const,
+                    notes: entry.notes || '',
+                    location: 'Imported (OCR)',
+                    mileage: null,
+                    flags: [],
+                    isManualEdit: false,
+                  }));
+                  addSessionEntries(newEntries);
                   addToast(`${ocrEntries.length} entries imported from scan`, 'success'); resetAll();
                 }}
                 disabled={ocrEntries.length === 0}

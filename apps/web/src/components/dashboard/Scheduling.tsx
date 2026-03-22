@@ -8,16 +8,13 @@ import {
   AlertTriangle,
   Calendar,
 } from 'lucide-react';
+import { mockEmployees } from '@servicecore/shared';
 
-const EMPLOYEES = [
-  'Marcus Trujillo',
-  'Jake Sandoval',
-  'Tyler Montoya',
-  'Brian Kessler',
-  'Carlos Vigil',
-  'Miguel Archuleta',
-  'Jordan Pacheco',
-];
+// Use first 7 real employees (drivers + service crew)
+const EMPLOYEES = mockEmployees
+  .filter((e) => e.department === 'Drivers' || e.department === 'Service Crew')
+  .slice(0, 7)
+  .map((e) => `${e.firstName} ${e.lastName}`);
 
 const JOB_SITES = ['Denver Metro', 'Boulder CU', 'Fort Collins', 'CO Springs', 'Arvada'] as const;
 type JobSite = (typeof JOB_SITES)[number];
@@ -44,21 +41,22 @@ const CYCLE_OPTIONS: (JobSite | null)[] = [...JOB_SITES, null];
 type ScheduleGrid = Record<string, Record<number, JobSite | null>>;
 
 function buildInitialSchedule(): ScheduleGrid {
-  // Deterministic seed assignments per employee across Mon-Sun (0-6)
-  const seed: Record<string, (JobSite | null)[]> = {
-    'Marcus Trujillo':   ['Denver Metro', 'Denver Metro', 'Boulder CU', 'Denver Metro', 'Denver Metro', null, null],
-    'Jake Sandoval':     ['Boulder CU', 'Boulder CU', 'Boulder CU', 'Fort Collins', 'Boulder CU', null, null],
-    'Tyler Montoya':     ['Fort Collins', 'Fort Collins', 'Denver Metro', 'Fort Collins', 'Fort Collins', 'Denver Metro', null],
-    'Brian Kessler':     ['CO Springs', 'CO Springs', 'CO Springs', 'CO Springs', 'Arvada', null, null],
-    'Carlos Vigil':      ['Arvada', 'Denver Metro', 'Arvada', 'Arvada', 'Arvada', null, null],
-    'Miguel Archuleta':  ['Denver Metro', 'Fort Collins', 'Fort Collins', 'Denver Metro', null, 'CO Springs', null],
-    'Jordan Pacheco':    ['CO Springs', 'Arvada', 'CO Springs', null, 'CO Springs', null, null],
-  };
+  // Deterministic seed assignments — rotate through sites for each employee
+  const seedPatterns: (JobSite | null)[][] = [
+    ['Denver Metro', 'Denver Metro', 'Boulder CU', 'Denver Metro', 'Denver Metro', null, null],
+    ['Boulder CU', 'Boulder CU', 'Boulder CU', 'Fort Collins', 'Boulder CU', null, null],
+    ['Fort Collins', 'Fort Collins', 'Denver Metro', 'Fort Collins', 'Fort Collins', 'Denver Metro', null],
+    ['CO Springs', 'CO Springs', 'CO Springs', 'CO Springs', 'Arvada', null, null],
+    ['Arvada', 'Denver Metro', 'Arvada', 'Arvada', 'Arvada', null, null],
+    ['Denver Metro', 'Fort Collins', 'Fort Collins', 'Denver Metro', null, 'CO Springs', null],
+    ['CO Springs', 'Arvada', 'CO Springs', null, 'CO Springs', null, null],
+  ];
 
   const grid: ScheduleGrid = {};
-  for (const emp of EMPLOYEES) {
+  for (let i = 0; i < EMPLOYEES.length; i++) {
+    const emp = EMPLOYEES[i];
     grid[emp] = {};
-    const row = seed[emp] ?? [null, null, null, null, null, null, null];
+    const row = seedPatterns[i % seedPatterns.length];
     for (let d = 0; d < 7; d++) {
       grid[emp][d] = row[d];
     }

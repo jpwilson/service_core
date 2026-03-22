@@ -20,6 +20,7 @@
     "@servicecore/shared": "workspace:*",
     "@types/leaflet": "^1.9.21",
     "date-fns": "^4.1.0",
+    "jspdf": "^4.2.0",
     "langfuse": "^3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",

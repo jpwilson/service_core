@@ -30,6 +30,7 @@ import {
   LogOut,
   Shield,
   Route,
+  Zap,
   CalendarDays,
   Users,
   Container,
@@ -118,6 +119,8 @@ function App() {
     setSelectedEmployeeId,
     dateRange,
     setDateRange,
+    demoMode,
+    setDemoMode,
   } = useAppStore();
 
   const { user, logout } = useAuth();
@@ -194,6 +197,23 @@ function App() {
         <div className="flex items-center gap-3 px-6 py-5 border-b border-white/10">
           <Wrench className="w-7 h-7 text-primary-500" style={{ transform: 'rotate(-90deg)' }} />
           <h1 className="text-xl font-bold tracking-tight">ServiceCore</h1>
+        </div>
+
+        <div className="flex items-center gap-2 px-6 py-1 border-b border-white/10">
+          <button
+            onClick={() => setDemoMode(!demoMode)}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide transition-colors ${
+              demoMode
+                ? 'bg-amber-500 text-white'
+                : 'bg-white/10 text-white/40 hover:text-white/60'
+            }`}
+          >
+            <Zap className="w-3 h-3" />
+            Demo {demoMode ? 'ON' : 'OFF'}
+          </button>
+          {demoMode && (
+            <span className="text-[10px] text-amber-300">1s = 20min</span>
+          )}
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
