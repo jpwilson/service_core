@@ -273,7 +273,7 @@ function App() {
           </div>
 
           <div className="flex items-center gap-4">
-            {role !== 'driver' && (
+            {role !== 'driver' && !['timeclock', 'routes', 'customers', 'equipment', 'settings', 'scheduling'].includes(dashboardTab) && (
               <div className="hidden md:block">
                 <DateRangePicker value={dateRange} onChange={setDateRange} />
               </div>
