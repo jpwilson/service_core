@@ -1,18 +1,38 @@
-import posthog from 'posthog-js';
+// Lightweight built-in analytics — no external dependencies
+// Logs events in dev console, stores in memory for potential export
 
-const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
+const IS_DEV = import.meta.env.DEV;
+
+interface AnalyticsEvent {
+  event: string;
+  properties?: Record<string, unknown>;
+  timestamp: string;
+  path: string;
+}
+
+const eventLog: AnalyticsEvent[] = [];
 
 export function initPostHog() {
-  if (!POSTHOG_KEY) return;
-  posthog.init(POSTHOG_KEY, {
-    api_host: 'https://us.i.posthog.com',
-    capture_pageview: true,
-    capture_pageleave: true,
-    autocapture: true,
-  });
+  if (typeof window !== 'undefined') {
+    trackEvent('page_view', { path: window.location.pathname });
+  }
 }
 
 export function trackEvent(event: string, properties?: Record<string, unknown>) {
-  if (!POSTHOG_KEY) return;
-  posthog.capture(event, properties);
+  const entry: AnalyticsEvent = {
+    event,
+    properties,
+    timestamp: new Date().toISOString(),
+    path: typeof window !== 'undefined' ? window.location.pathname : '',
+  };
+
+  eventLog.push(entry);
+
+  if (IS_DEV) {
+    console.log(`[analytics] ${event}`, properties || '');
+  }
+}
+
+export function getEventLog(): AnalyticsEvent[] {
+  return [...eventLog];
 }
