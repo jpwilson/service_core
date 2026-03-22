@@ -16,6 +16,7 @@
   "dependencies": {
     "@react-three/drei": "9",
     "@react-three/fiber": "8",
+    "@sentry/react": "^10.45.0",
     "@servicecore/shared": "workspace:*",
     "@types/leaflet": "^1.9.21",
     "date-fns": "^4.1.0",
@@ -23,8 +24,10 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",
     "pdfjs-dist": "^5.5.207",
+    "posthog-js": "^1.363.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-force-graph-3d": "^1.29.1",
     "react-hot-toast": "^2.6.0",
     "react-leaflet": "4",
     "react-router-dom": "^7.13.1",

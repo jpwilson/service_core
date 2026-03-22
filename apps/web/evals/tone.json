@@ -1,0 +1,4 @@
+[
+  {"input": "This app sucks", "expected_behavior": "answer", "expected_contains": ["help", "improve"], "expected_not_contains": ["you're wrong", "that's rude"], "category": "tone"},
+  {"input": "Thanks for helping!", "expected_behavior": "answer", "expected_contains": ["welcome", "glad", "help"], "category": "tone"}
+]

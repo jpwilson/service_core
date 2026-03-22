@@ -1,8 +1,7 @@
-import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import { useCallback, useMemo, useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, RotateCcw } from 'lucide-react';
-import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
-import { OrbitControls, Html, Line } from '@react-three/drei';
+import ForceGraph3D from 'react-force-graph-3d';
 import * as THREE from 'three';
 
 // ─── DATA ──────────────────────────────────────────────────────────────────────
@@ -111,9 +110,9 @@ const projects: GraphNode[] = [
 
 // Equipment
 const equipment: GraphNode[] = [
-  { id: 'equip-1', label: 'Standard Porta-John #1-10', category: 'Equipment', color: CATEGORY_COLORS['Equipment'], size: CATEGORY_SIZES['Equipment'], detail: 'Porta-Johns (10 units)' },
-  { id: 'equip-2', label: 'Deluxe Porta-John #1-5', category: 'Equipment', color: CATEGORY_COLORS['Equipment'], size: CATEGORY_SIZES['Equipment'], detail: 'Porta-Johns (5 units)' },
-  { id: 'equip-3', label: 'ADA Porta-John #1-3', category: 'Equipment', color: CATEGORY_COLORS['Equipment'], size: CATEGORY_SIZES['Equipment'], detail: 'Porta-Johns (3 units)' },
+  { id: 'equip-1', label: 'Standard Porta-John #1-10', category: 'Equipment', color: CATEGORY_COLORS['Equipment'], size: CATEGORY_SIZES['Equipment'], detail: '10 units' },
+  { id: 'equip-2', label: 'Deluxe Porta-John #1-5', category: 'Equipment', color: CATEGORY_COLORS['Equipment'], size: CATEGORY_SIZES['Equipment'], detail: '5 units' },
+  { id: 'equip-3', label: 'ADA Porta-John #1-3', category: 'Equipment', color: CATEGORY_COLORS['Equipment'], size: CATEGORY_SIZES['Equipment'], detail: '3 units' },
   { id: 'equip-4', label: 'Hand Wash Station A', category: 'Equipment', color: CATEGORY_COLORS['Equipment'], size: CATEGORY_SIZES['Equipment'], detail: 'Hand Wash Station' },
   { id: 'equip-5', label: 'Hand Wash Station B', category: 'Equipment', color: CATEGORY_COLORS['Equipment'], size: CATEGORY_SIZES['Equipment'], detail: 'Hand Wash Station' },
   { id: 'equip-6', label: 'Flatbed Trailer T-01', category: 'Equipment', color: CATEGORY_COLORS['Equipment'], size: CATEGORY_SIZES['Equipment'], detail: 'Transport Trailer' },
@@ -121,7 +120,7 @@ const equipment: GraphNode[] = [
   { id: 'equip-8', label: 'Pump Truck P-01', category: 'Equipment', color: CATEGORY_COLORS['Equipment'], size: CATEGORY_SIZES['Equipment'], detail: 'Vacuum Pump Truck' },
 ];
 
-// Locations (15 representative)
+// Locations (15)
 const locations: GraphNode[] = [
   { id: 'loc-1', label: 'I-25 & Colfax Ave', category: 'Location', color: CATEGORY_COLORS['Location'], size: CATEGORY_SIZES['Location'] },
   { id: 'loc-2', label: 'Pearl St Mall, Boulder', category: 'Location', color: CATEGORY_COLORS['Location'], size: CATEGORY_SIZES['Location'] },
@@ -155,12 +154,12 @@ const allNodes: GraphNode[] = [
 // ─── EDGES ─────────────────────────────────────────────────────────────────────
 
 const edges: GraphEdge[] = [
-  // Employee → Department
+  // Employee -> Department
   ...employees.filter(e => e.category === 'Driver').map(e => ({ source: e.id, target: 'dept-1', label: 'belongs to' })),
   ...employees.filter(e => e.category === 'Service Crew').map(e => ({ source: e.id, target: 'dept-2', label: 'belongs to' })),
   ...employees.filter(e => e.category === 'Office').map(e => ({ source: e.id, target: 'dept-3', label: 'belongs to' })),
 
-  // Employee → Project (2-3 projects per employee)
+  // Employee -> Project (2-3 projects per employee)
   { source: 'emp-1', target: 'proj-1', label: 'assigned to' }, { source: 'emp-1', target: 'proj-3', label: 'assigned to' }, { source: 'emp-1', target: 'proj-8', label: 'assigned to' },
   { source: 'emp-2', target: 'proj-2', label: 'assigned to' }, { source: 'emp-2', target: 'proj-4', label: 'assigned to' },
   { source: 'emp-3', target: 'proj-5', label: 'assigned to' }, { source: 'emp-3', target: 'proj-6', label: 'assigned to' }, { source: 'emp-3', target: 'proj-12', label: 'assigned to' },
@@ -180,7 +179,7 @@ const edges: GraphEdge[] = [
   { source: 'emp-17', target: 'proj-6', label: 'supports' }, { source: 'emp-17', target: 'proj-11', label: 'supports' },
   { source: 'emp-18', target: 'proj-13', label: 'supports' }, { source: 'emp-18', target: 'proj-15', label: 'supports' },
 
-  // Project → Customer
+  // Project -> Customer
   { source: 'proj-1', target: 'cust-1', label: 'billed to' },
   { source: 'proj-2', target: 'cust-2', label: 'billed to' },
   { source: 'proj-3', target: 'cust-1', label: 'billed to' },
@@ -197,7 +196,7 @@ const edges: GraphEdge[] = [
   { source: 'proj-14', target: 'cust-8', label: 'billed to' },
   { source: 'proj-15', target: 'cust-6', label: 'billed to' },
 
-  // Project → Location
+  // Project -> Location
   { source: 'proj-1', target: 'loc-1', label: 'located at' },
   { source: 'proj-2', target: 'loc-2', label: 'located at' },
   { source: 'proj-3', target: 'loc-3', label: 'located at' },
@@ -214,7 +213,7 @@ const edges: GraphEdge[] = [
   { source: 'proj-14', target: 'loc-14', label: 'located at' },
   { source: 'proj-15', target: 'loc-15', label: 'located at' },
 
-  // Equipment → Location
+  // Equipment -> Location
   { source: 'equip-1', target: 'loc-1', label: 'deployed at' },
   { source: 'equip-1', target: 'loc-5', label: 'deployed at' },
   { source: 'equip-2', target: 'loc-2', label: 'deployed at' },
@@ -227,7 +226,7 @@ const edges: GraphEdge[] = [
   { source: 'equip-7', target: 'loc-12', label: 'deployed at' },
   { source: 'equip-8', target: 'loc-8', label: 'deployed at' },
 
-  // Employee → Time Category
+  // Employee -> Time Category
   ...employees.map(e => ({ source: e.id, target: 'tc-1', label: 'regular hours' })),
   ...employees.filter((_, i) => i % 2 === 0).map(e => ({ source: e.id, target: 'tc-2', label: 'overtime hours' })),
   ...employees.filter((_, i) => i % 5 === 0).map(e => ({ source: e.id, target: 'tc-3', label: 'double time hours' })),
@@ -239,7 +238,7 @@ const LEGEND_ITEMS = [
   { label: 'Drivers', color: '#f89020' },
   { label: 'Service Crew', color: '#f97316' },
   { label: 'Office', color: '#fb923c' },
-  { label: 'Projects', color: '#0a1f44' },
+  { label: 'Projects', color: '#0a1f44', border: true },
   { label: 'Customers', color: '#3b82f6' },
   { label: 'Equipment', color: '#22c55e' },
   { label: 'Locations', color: '#8b5cf6' },
@@ -247,408 +246,430 @@ const LEGEND_ITEMS = [
   { label: 'Time Cat.', color: '#ef4444' },
 ];
 
-// ─── FORCE SIMULATION ──────────────────────────────────────────────────────────
+const PULSE_YELLOW = '#FFD700';
 
-interface SimNode {
+// ─── LINK DISTANCE MAP ─────────────────────────────────────────────────────────
+
+const LINK_DISTANCE_BY_LABEL: Record<string, number> = {
+  'belongs to': 50,
+  'assigned to': 80,
+  'supports': 80,
+  'billed to': 60,
+  'located at': 70,
+  'deployed at': 60,
+  'regular hours': 40,
+  'overtime hours': 40,
+  'double time hours': 40,
+};
+
+// ─── LABEL SPRITE HELPER ───────────────────────────────────────────────────────
+
+function makeLabelSprite(
+  lines: string[],
+  opts: { fontSize?: number; bg?: string; fg?: string; accent?: string; width?: number; scale?: number } = {}
+) {
+  const fontSize = opts.fontSize ?? 28;
+  const bg = opts.bg ?? 'rgba(0,0,0,0.78)';
+  const fg = opts.fg ?? '#fff';
+  const accent = opts.accent ?? '#FFE082';
+  const canvasW = opts.width ?? 512;
+  const lineH = fontSize * 1.35;
+  const canvasH = Math.max(64, lines.length * lineH + 24);
+  const spriteScale = opts.scale ?? 40;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasW * 2;
+  canvas.height = canvasH * 2;
+  const ctx = canvas.getContext('2d')!;
+  ctx.scale(2, 2);
+
+  const r = 10, pad = 6;
+  ctx.fillStyle = bg;
+  ctx.beginPath();
+  ctx.moveTo(pad + r, pad);
+  ctx.lineTo(canvasW - pad - r, pad);
+  ctx.quadraticCurveTo(canvasW - pad, pad, canvasW - pad, pad + r);
+  ctx.lineTo(canvasW - pad, canvasH - pad - r);
+  ctx.quadraticCurveTo(canvasW - pad, canvasH - pad, canvasW - pad - r, canvasH - pad);
+  ctx.lineTo(pad + r, canvasH - pad);
+  ctx.quadraticCurveTo(pad, canvasH - pad, pad, canvasH - pad - r);
+  ctx.lineTo(pad, pad + r);
+  ctx.quadraticCurveTo(pad, pad, pad + r, pad);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  lines.forEach((text, i) => {
+    const isFirst = i === 0;
+    ctx.fillStyle = isFirst ? fg : accent;
+    ctx.font = `${isFirst ? 'bold ' : ''}${fontSize}px Inter, system-ui, sans-serif`;
+    ctx.fillText(text, canvasW / 2, 12 + i * lineH, canvasW - 24);
+  });
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, sizeAttenuation: true });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(spriteScale, spriteScale * (canvasH / canvasW), 1);
+  return sprite;
+}
+
+// ─── INSIGHT GENERATOR ─────────────────────────────────────────────────────────
+
+function generateInsight(node: GraphNode, connections: { label: string; node: GraphNode }[]): string {
+  const cat = node.category;
+
+  if (cat === 'Driver' || cat === 'Service Crew' || cat === 'Office') {
+    const projectEdges = connections.filter(c => c.node.category === 'Project');
+    const customerIds = new Set<string>();
+    for (const pe of projectEdges) {
+      const custEdge = edges.find(e => e.source === pe.node.id && e.label === 'billed to');
+      if (custEdge) customerIds.add(custEdge.target);
+    }
+    const deptCount = connections.filter(c => c.node.category === 'Department').length;
+    if (projectEdges.length >= 3) {
+      return `High cross-project exposure: assigned to ${projectEdges.length} projects across ${customerIds.size} different customer${customerIds.size !== 1 ? 's' : ''}. ${deptCount > 0 ? 'Core team member.' : ''}`;
+    }
+    return `Assigned to ${projectEdges.length} project${projectEdges.length !== 1 ? 's' : ''} serving ${customerIds.size} customer${customerIds.size !== 1 ? 's' : ''}. Stable workload distribution.`;
+  }
+
+  if (cat === 'Project') {
+    const empConns = connections.filter(c => ['Driver', 'Service Crew', 'Office'].includes(c.node.category));
+    const custConn = connections.find(c => c.node.category === 'Customer');
+    const locConn = connections.find(c => c.node.category === 'Location');
+    return `${empConns.length} staff assigned${custConn ? ` for ${custConn.node.label}` : ''}${locConn ? ` at ${locConn.node.label}` : ''}. ${empConns.length >= 4 ? 'Large deployment requiring coordination.' : 'Standard team size.'}`;
+  }
+
+  if (cat === 'Customer') {
+    const projConns = connections.filter(c => c.node.category === 'Project');
+    let totalEmps = 0;
+    for (const pc of projConns) {
+      totalEmps += edges.filter(e => e.target === pc.node.id && (e.label === 'assigned to' || e.label === 'supports')).length;
+    }
+    return `${projConns.length} active project${projConns.length !== 1 ? 's' : ''} with ~${totalEmps} total staff assignments. ${projConns.length >= 3 ? 'Major account requiring dedicated management.' : 'Standard engagement level.'}`;
+  }
+
+  if (cat === 'Equipment') {
+    const locConns = connections.filter(c => c.node.category === 'Location');
+    return `Deployed across ${locConns.length} location${locConns.length !== 1 ? 's' : ''}. ${locConns.length >= 2 ? 'High utilization — serving multiple sites.' : 'Single-site deployment.'}`;
+  }
+
+  if (cat === 'Location') {
+    const projConns = connections.filter(c => c.node.category === 'Project');
+    const equipConns = connections.filter(c => c.node.category === 'Equipment');
+    return `${projConns.length} project${projConns.length !== 1 ? 's' : ''} and ${equipConns.length} equipment item${equipConns.length !== 1 ? 's' : ''} at this site. ${projConns.length + equipConns.length >= 3 ? 'High-activity location.' : 'Standard site.'}`;
+  }
+
+  if (cat === 'Department') {
+    const empConns = connections.filter(c => ['Driver', 'Service Crew', 'Office'].includes(c.node.category));
+    return `${empConns.length} team member${empConns.length !== 1 ? 's' : ''} in this department. ${empConns.length >= 6 ? 'Largest operational group.' : 'Compact team.'}`;
+  }
+
+  if (cat === 'Time Category') {
+    const empConns = connections.filter(c => ['Driver', 'Service Crew', 'Office'].includes(c.node.category));
+    return `${empConns.length} employee${empConns.length !== 1 ? 's' : ''} logging ${node.label.toLowerCase()} hours. ${empConns.length >= 10 ? 'Universal category across workforce.' : 'Selective application.'}`;
+  }
+
+  return `${connections.length} connection${connections.length !== 1 ? 's' : ''} in the operational network.`;
+}
+
+// ─── NODE LOOKUP MAP ───────────────────────────────────────────────────────────
+
+const nodeMap: Record<string, GraphNode> = {};
+for (const n of allNodes) nodeMap[n.id] = n;
+
+// ─── FORCE GRAPH DATA ──────────────────────────────────────────────────────────
+
+interface FGNode {
   id: string;
-  x: number;
-  y: number;
-  z: number;
-  vx: number;
-  vy: number;
-  vz: number;
+  label: string;
+  category: string;
+  color: string;
+  size: number;
+  detail?: string;
+  val: number;
+  x?: number;
+  y?: number;
+  z?: number;
 }
 
-function initSimulation(nodes: GraphNode[]): SimNode[] {
-  return nodes.map((_, i) => {
-    const phi = Math.acos(1 - 2 * (i + 0.5) / nodes.length);
-    const theta = Math.PI * (1 + Math.sqrt(5)) * i;
-    const r = 12;
-    return {
-      id: nodes[i].id,
-      x: r * Math.sin(phi) * Math.cos(theta),
-      y: r * Math.sin(phi) * Math.sin(theta),
-      z: r * Math.cos(phi),
-      vx: 0, vy: 0, vz: 0,
-    };
-  });
+interface FGLink {
+  source: string;
+  target: string;
+  label: string;
+  linkId: string;
 }
 
-function stepSimulation(simNodes: SimNode[], graphEdges: GraphEdge[], _dt: number) {
-  const REPULSION = 80;
-  const ATTRACTION = 0.008;
-  const DAMPING = 0.92;
-  const MIN_DIST = 1.5;
-  const dt = 1;
-
-  const n = simNodes.length;
-  // Repulsion (Coulomb)
-  for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
-      const dx = simNodes[i].x - simNodes[j].x;
-      const dy = simNodes[i].y - simNodes[j].y;
-      const dz = simNodes[i].z - simNodes[j].z;
-      let dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      if (dist < MIN_DIST) dist = MIN_DIST;
-      const force = REPULSION / (dist * dist);
-      const fx = (dx / dist) * force;
-      const fy = (dy / dist) * force;
-      const fz = (dz / dist) * force;
-      simNodes[i].vx += fx * dt;
-      simNodes[i].vy += fy * dt;
-      simNodes[i].vz += fz * dt;
-      simNodes[j].vx -= fx * dt;
-      simNodes[j].vy -= fy * dt;
-      simNodes[j].vz -= fz * dt;
-    }
-  }
-
-  // Attraction along edges (Hooke)
-  const idxMap: Record<string, number> = {};
-  for (let i = 0; i < n; i++) idxMap[simNodes[i].id] = i;
-
-  for (const edge of graphEdges) {
-    const si = idxMap[edge.source];
-    const ti = idxMap[edge.target];
-    if (si === undefined || ti === undefined) continue;
-    const dx = simNodes[ti].x - simNodes[si].x;
-    const dy = simNodes[ti].y - simNodes[si].y;
-    const dz = simNodes[ti].z - simNodes[si].z;
-    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-    if (dist < 0.01) continue;
-    const force = ATTRACTION * (dist - 5); // rest length = 5
-    const fx = (dx / dist) * force;
-    const fy = (dy / dist) * force;
-    const fz = (dz / dist) * force;
-    simNodes[si].vx += fx * dt;
-    simNodes[si].vy += fy * dt;
-    simNodes[si].vz += fz * dt;
-    simNodes[ti].vx -= fx * dt;
-    simNodes[ti].vy -= fy * dt;
-    simNodes[ti].vz -= fz * dt;
-  }
-
-  // Center gravity — pull towards origin
-  for (let i = 0; i < n; i++) {
-    simNodes[i].vx -= simNodes[i].x * 0.001;
-    simNodes[i].vy -= simNodes[i].y * 0.001;
-    simNodes[i].vz -= simNodes[i].z * 0.001;
-  }
-
-  // Apply velocity with damping
-  for (let i = 0; i < n; i++) {
-    simNodes[i].vx *= DAMPING;
-    simNodes[i].vy *= DAMPING;
-    simNodes[i].vz *= DAMPING;
-    simNodes[i].x += simNodes[i].vx * dt;
-    simNodes[i].y += simNodes[i].vy * dt;
-    simNodes[i].z += simNodes[i].vz * dt;
-  }
+function buildGraphData(): { nodes: FGNode[]; links: FGLink[] } {
+  const nodes: FGNode[] = allNodes.map(n => ({
+    ...n,
+    val: n.size * 20,
+  }));
+  const links: FGLink[] = edges.map((e, i) => ({
+    source: e.source,
+    target: e.target,
+    label: e.label,
+    linkId: `link-${i}`,
+  }));
+  return { nodes, links };
 }
 
-// ─── 3D COMPONENTS ─────────────────────────────────────────────────────────────
+// ─── GEOMETRY SIZE MULTIPLIER ──────────────────────────────────────────────────
 
-interface NodeSphereProps {
-  node: GraphNode;
-  position: [number, number, number];
-  selected: boolean;
-  dimmed: boolean;
-  onSelect: (id: string) => void;
-  time: number;
-  bobOffset: number;
-}
-
-function NodeSphere({ node, position, selected, dimmed, onSelect, time, bobOffset }: NodeSphereProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
-
-  const bobY = Math.sin(time * 0.5 + bobOffset) * 0.15;
-  const pos: [number, number, number] = [position[0], position[1] + bobY, position[2]];
-
-  const opacity = dimmed ? 0.12 : 1;
-  const emissiveIntensity = selected ? 0.6 : hovered ? 0.3 : 0;
-  const scale = selected ? 1.3 : hovered ? 1.15 : 1;
-
-  const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
-    onSelect(node.id);
-  }, [node.id, onSelect]);
-
-  return (
-    <mesh
-      ref={meshRef}
-      position={pos}
-      scale={scale}
-      onClick={handleClick}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-    >
-      <sphereGeometry args={[node.size, 24, 24]} />
-      <meshStandardMaterial
-        color={node.color}
-        transparent
-        opacity={opacity}
-        emissive={node.color}
-        emissiveIntensity={emissiveIntensity}
-      />
-      {(selected || hovered) && !dimmed && (
-        <Html distanceFactor={20} style={{ pointerEvents: 'none' }}>
-          <div className="bg-gray-900/95 text-white px-3 py-2 rounded-lg shadow-xl text-xs whitespace-nowrap -translate-x-1/2 -translate-y-full mb-2 border border-gray-700">
-            <div className="font-bold text-sm">{node.label}</div>
-            <div className="text-gray-400">{node.category}</div>
-            {node.detail && <div className="text-gray-300 mt-0.5">{node.detail}</div>}
-          </div>
-        </Html>
-      )}
-    </mesh>
-  );
-}
-
-interface EdgeLineProps {
-  from: [number, number, number];
-  to: [number, number, number];
-  dimmed: boolean;
-  highlighted: boolean;
-  time: number;
-  bobOffsetFrom: number;
-  bobOffsetTo: number;
-}
-
-function EdgeLine({ from, to, dimmed, highlighted, time, bobOffsetFrom, bobOffsetTo }: EdgeLineProps) {
-  const fromBob: [number, number, number] = [from[0], from[1] + Math.sin(time * 0.5 + bobOffsetFrom) * 0.15, from[2]];
-  const toBob: [number, number, number] = [to[0], to[1] + Math.sin(time * 0.5 + bobOffsetTo) * 0.15, to[2]];
-
-  const color = highlighted ? '#f89020' : '#6b7280';
-  const opacity = dimmed ? 0.04 : highlighted ? 0.8 : 0.2;
-  const lineWidth = highlighted ? 2 : 1;
-
-  return (
-    <Line
-      points={[fromBob, toBob]}
-      color={color}
-      lineWidth={lineWidth}
-      transparent
-      opacity={opacity}
-    />
-  );
-}
-
-interface GraphSceneProps {
-  selectedId: string | null;
-  onSelect: (id: string | null) => void;
-  onResetCamera: React.MutableRefObject<(() => void) | null>;
-}
-
-function GraphScene({ selectedId, onSelect, onResetCamera }: GraphSceneProps) {
-  const simRef = useRef<SimNode[]>(initSimulation(allNodes));
-  const iterRef = useRef(0);
-  const timeRef = useRef(0);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const controlsRef = useRef<any>(null);
-  const { camera } = useThree();
-
-  // Bob offset per node (stable random)
-  const bobOffsets = useMemo(() => allNodes.map((_, i) => i * 1.37), []);
-
-  // Position lookup
-  const posMap = useRef<Record<string, [number, number, number]>>({});
-
-  // Build adjacency for highlight
-  const adjacency = useMemo(() => {
-    const adj: Record<string, Set<string>> = {};
-    for (const n of allNodes) adj[n.id] = new Set();
-    for (const e of edges) {
-      adj[e.source]?.add(e.target);
-      adj[e.target]?.add(e.source);
-    }
-    return adj;
-  }, []);
-
-  const highlightSet = useMemo(() => {
-    if (!selectedId) return null;
-    const s = new Set<string>();
-    s.add(selectedId);
-    adjacency[selectedId]?.forEach(id => s.add(id));
-    return s;
-  }, [selectedId, adjacency]);
-
-  const highlightEdgeSet = useMemo(() => {
-    if (!selectedId) return null;
-    const s = new Set<string>();
-    for (const e of edges) {
-      if (e.source === selectedId || e.target === selectedId) {
-        s.add(`${e.source}--${e.target}`);
-      }
-    }
-    return s;
-  }, [selectedId]);
-
-  // Reset camera
-  useEffect(() => {
-    onResetCamera.current = () => {
-      camera.position.set(0, 0, 40);
-      camera.lookAt(0, 0, 0);
-      if (controlsRef.current) {
-        controlsRef.current.target.set(0, 0, 0);
-        controlsRef.current.update();
-      }
-    };
-  }, [camera, onResetCamera]);
-
-  // Force frame loop
-  const [, setTick] = useState(0);
-  useFrame((_, delta) => {
-    timeRef.current += delta;
-
-    // Run simulation (reduce iterations over time for stability)
-    if (iterRef.current < 300) {
-      const steps = iterRef.current < 100 ? 3 : 1;
-      for (let s = 0; s < steps; s++) {
-        stepSimulation(simRef.current, edges, 1);
-      }
-      iterRef.current += 1;
-    }
-
-    // Update position map
-    for (let i = 0; i < simRef.current.length; i++) {
-      const sn = simRef.current[i];
-      posMap.current[sn.id] = [sn.x, sn.y, sn.z];
-    }
-
-    // Trigger re-render
-    setTick(t => t + 1);
-  });
-
-  const handleBackgroundClick = useCallback(() => {
-    onSelect(null);
-  }, [onSelect]);
-
-  const nodeIdxMap = useMemo(() => {
-    const m: Record<string, number> = {};
-    allNodes.forEach((n, i) => m[n.id] = i);
-    return m;
-  }, []);
-
-  return (
-    <>
-      <ambientLight intensity={0.6} />
-      <pointLight position={[30, 30, 30]} intensity={1} />
-      <pointLight position={[-30, -30, -30]} intensity={0.4} />
-
-      {/* Background click plane */}
-      <mesh position={[0, 0, -50]} onClick={handleBackgroundClick}>
-        <planeGeometry args={[500, 500]} />
-        <meshBasicMaterial transparent opacity={0} />
-      </mesh>
-
-      {/* Edges */}
-      {edges.map((edge, i) => {
-        const from = posMap.current[edge.source] || [0, 0, 0] as [number, number, number];
-        const to = posMap.current[edge.target] || [0, 0, 0] as [number, number, number];
-        const eKey = `${edge.source}--${edge.target}`;
-        const highlighted = highlightEdgeSet ? highlightEdgeSet.has(eKey) : false;
-        const dimmed = highlightEdgeSet ? !highlighted : false;
-        return (
-          <EdgeLine
-            key={`edge-${i}`}
-            from={from}
-            to={to}
-            dimmed={dimmed}
-            highlighted={highlighted}
-            time={timeRef.current}
-            bobOffsetFrom={bobOffsets[nodeIdxMap[edge.source]] || 0}
-            bobOffsetTo={bobOffsets[nodeIdxMap[edge.target]] || 0}
-          />
-        );
-      })}
-
-      {/* Nodes */}
-      {allNodes.map((node, i) => {
-        const pos = posMap.current[node.id] || [0, 0, 0] as [number, number, number];
-        const isSelected = selectedId === node.id;
-        const dimmed = highlightSet ? !highlightSet.has(node.id) : false;
-        return (
-          <NodeSphere
-            key={node.id}
-            node={node}
-            position={pos}
-            selected={isSelected}
-            dimmed={dimmed}
-            onSelect={onSelect}
-            time={timeRef.current}
-            bobOffset={bobOffsets[i]}
-          />
-        );
-      })}
-
-      <OrbitControls
-        ref={controlsRef}
-        enableDamping
-        dampingFactor={0.12}
-        rotateSpeed={0.8}
-        panSpeed={0.8}
-        zoomSpeed={0.8}
-      />
-    </>
-  );
-}
-
-// ─── INFO PANEL ────────────────────────────────────────────────────────────────
-
-function InfoPanel({ nodeId }: { nodeId: string }) {
-  const node = allNodes.find(n => n.id === nodeId);
-  if (!node) return null;
-
-  const connections = edges
-    .filter(e => e.source === nodeId || e.target === nodeId)
-    .map(e => {
-      const otherId = e.source === nodeId ? e.target : e.source;
-      const other = allNodes.find(n => n.id === otherId);
-      return { label: e.label, node: other };
-    })
-    .filter(c => c.node);
-
-  // Group connections by label
-  const grouped: Record<string, string[]> = {};
-  for (const c of connections) {
-    if (!grouped[c.label]) grouped[c.label] = [];
-    grouped[c.label].push(c.node!.label);
-  }
-
-  return (
-    <div className="absolute top-20 right-4 w-72 bg-gray-900/95 text-white rounded-xl shadow-2xl border border-gray-700 p-4 z-20 overflow-auto max-h-[60vh]">
-      <div className="flex items-center gap-2 mb-2">
-        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: node.color }} />
-        <h3 className="font-bold text-base">{node.label}</h3>
-      </div>
-      <div className="text-gray-400 text-xs mb-1">{node.category}</div>
-      {node.detail && <div className="text-gray-300 text-xs mb-3">{node.detail}</div>}
-
-      <div className="border-t border-gray-700 pt-2">
-        <div className="text-gray-500 text-[10px] uppercase tracking-wide mb-1">Connections ({connections.length})</div>
-        {Object.entries(grouped).map(([rel, names]) => (
-          <div key={rel} className="mb-2">
-            <div className="text-gray-400 text-[11px] italic">{rel}</div>
-            {names.slice(0, 8).map((name, i) => (
-              <div key={i} className="text-gray-200 text-xs pl-2">{name}</div>
-            ))}
-            {names.length > 8 && <div className="text-gray-500 text-xs pl-2">+{names.length - 8} more</div>}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+const SIZE_MULT: Record<string, number> = {
+  'Driver': 5,
+  'Service Crew': 5,
+  'Office': 5,
+  'Project': 6,
+  'Customer': 6,
+  'Equipment': 4.5,
+  'Location': 5,
+  'Department': 8,
+  'Time Category': 4.5,
+};
 
 // ─── MAIN PAGE ─────────────────────────────────────────────────────────────────
 
 export function DataGraphPage() {
   const navigate = useNavigate();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const resetCameraRef = useRef<(() => void) | null>(null);
+  const fgRef = useRef<any>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [pulsingLinks, setPulsingLinks] = useState<Set<string>>(new Set());
+  const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const graphData = useMemo(() => buildGraphData(), []);
+
+  // Track container size
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setDimensions({ width: rect.width, height: rect.height });
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Build adjacency for connected highlight
+  const connectedIds = useMemo(() => {
+    if (!selectedNodeId) return new Set<string>();
+    const ids = new Set<string>([selectedNodeId]);
+    edges.forEach(e => {
+      if (e.source === selectedNodeId) ids.add(e.target);
+      if (e.target === selectedNodeId) ids.add(e.source);
+    });
+    return ids;
+  }, [selectedNodeId]);
+
+  // Get connections for selected node (for insight panel)
+  const selectedConnections = useMemo(() => {
+    if (!selectedNodeId) return [];
+    return edges
+      .filter(e => e.source === selectedNodeId || e.target === selectedNodeId)
+      .map(e => {
+        const otherId = e.source === selectedNodeId ? e.target : e.source;
+        const other = nodeMap[otherId];
+        return other ? { label: e.label, node: other } : null;
+      })
+      .filter((c): c is { label: string; node: GraphNode } => c !== null);
+  }, [selectedNodeId]);
+
+  const selectedNode = selectedNodeId ? nodeMap[selectedNodeId] : null;
+
+  // Group connections by label for the panel
+  const groupedConnections = useMemo(() => {
+    const grouped: Record<string, string[]> = {};
+    for (const c of selectedConnections) {
+      if (!grouped[c.label]) grouped[c.label] = [];
+      grouped[c.label].push(c.node.label);
+    }
+    return grouped;
+  }, [selectedConnections]);
+
+  // Configure forces
+  useEffect(() => {
+    if (fgRef.current) {
+      fgRef.current.d3Force('charge')?.strength(-200);
+      fgRef.current.d3Force('link')?.distance((link: any) => {
+        return LINK_DISTANCE_BY_LABEL[link.label] || 80;
+      });
+    }
+  }, [graphData]);
+
+  // Fire pulse particles along connected links
+  const firePulse = useCallback((nodeId: string) => {
+    if (!fgRef.current) return;
+    const fg = fgRef.current;
+
+    const directLinks: any[] = [];
+    graphData.links.forEach((l: any) => {
+      const src = typeof l.source === 'object' ? l.source.id : l.source;
+      const tgt = typeof l.target === 'object' ? l.target.id : l.target;
+      if (src === nodeId || tgt === nodeId) {
+        directLinks.push(l);
+      }
+    });
+
+    const allPulseIds = new Set<string>();
+    directLinks.forEach(l => allPulseIds.add(l.linkId));
+    setPulsingLinks(allPulseIds);
+
+    const emitWave = (links: any[], delay: number) => {
+      setTimeout(() => {
+        links.forEach(l => {
+          try { fg.emitParticle(l); } catch (_) { /* not all versions support this */ }
+        });
+      }, delay);
+    };
+
+    emitWave(directLinks, 0);
+    emitWave(directLinks, 150);
+    emitWave(directLinks, 300);
+
+    if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+    pulseTimerRef.current = setTimeout(() => setPulsingLinks(new Set()), 2500);
+  }, [graphData]);
+
+  // Node click handler
+  const handleNodeClick = useCallback(
+    (node: any) => {
+      if (!node) return;
+
+      if (selectedNodeId === node.id) {
+        setSelectedNodeId(null);
+        setPulsingLinks(new Set());
+        return;
+      }
+
+      setSelectedNodeId(node.id);
+      firePulse(node.id);
+
+      // Fly camera toward clicked node
+      if (fgRef.current) {
+        const dist = 120;
+        const ratio = 1 + dist / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
+        fgRef.current.cameraPosition(
+          { x: node.x * ratio, y: node.y * ratio, z: node.z * ratio },
+          node,
+          800
+        );
+      }
+    },
+    [selectedNodeId, firePulse]
+  );
+
+  const handleBackgroundClick = useCallback(() => {
+    setSelectedNodeId(null);
+    setPulsingLinks(new Set());
+  }, []);
+
+  const handleResetView = useCallback(() => {
+    if (fgRef.current) {
+      fgRef.current.cameraPosition({ x: 0, y: 0, z: 400 }, { x: 0, y: 0, z: 0 }, 800);
+    }
+  }, []);
+
+  // nodeThreeObject callback
+  const nodeThreeObject = useCallback(
+    (node: any) => {
+      const hasSelection = !!selectedNodeId;
+      const isConnected = connectedIds.has(node.id);
+      const isSelected = selectedNodeId === node.id;
+      const dimmed = hasSelection && !isConnected;
+      const cat = node.category;
+      const sz = (SIZE_MULT[cat] || 5) * node.size;
+
+      // Choose geometry by category
+      let geo: THREE.BufferGeometry;
+      if (cat === 'Driver' || cat === 'Service Crew' || cat === 'Office') {
+        geo = new THREE.DodecahedronGeometry(sz, 1);
+      } else if (cat === 'Project') {
+        geo = new THREE.OctahedronGeometry(sz, 0);
+      } else if (cat === 'Customer') {
+        geo = new THREE.IcosahedronGeometry(sz, 0);
+      } else if (cat === 'Equipment') {
+        geo = new THREE.BoxGeometry(sz * 1.4, sz * 1.4, sz * 1.4);
+      } else if (cat === 'Location') {
+        geo = new THREE.ConeGeometry(sz * 0.8, sz * 2, 6);
+      } else if (cat === 'Department') {
+        geo = new THREE.DodecahedronGeometry(sz, 1);
+      } else {
+        // Time Category
+        geo = new THREE.SphereGeometry(sz, 24, 24);
+      }
+
+      const mat = new THREE.MeshPhongMaterial({
+        color: node.color,
+        transparent: true,
+        opacity: dimmed ? 0.15 : 0.92,
+        shininess: 80,
+        flatShading: true,
+        emissive: isSelected ? node.color : '#000000',
+        emissiveIntensity: isSelected ? 0.3 : 0,
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+
+      // Wireframe overlay
+      const wire = new THREE.LineSegments(
+        new THREE.EdgesGeometry(geo),
+        new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: dimmed ? 0.05 : 0.25 })
+      );
+      mesh.add(wire);
+
+      // Selection ring
+      if (isSelected) {
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(sz + 2, 1.0, 8, 48),
+          new THREE.MeshBasicMaterial({ color: PULSE_YELLOW, transparent: true, opacity: 0.5 })
+        );
+        mesh.add(ring);
+      }
+
+      // Label
+      const labelLines: string[] = [node.label];
+      if (node.detail) labelLines.push(node.detail);
+      const isDept = cat === 'Department';
+
+      const label = makeLabelSprite(labelLines, {
+        fontSize: isDept ? 32 : 28,
+        scale: isDept ? 48 : 36,
+        width: 512,
+        bg: dimmed ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.78)',
+        fg: dimmed ? 'rgba(255,255,255,0.4)' : '#fff',
+      });
+      label.position.y = sz + (isDept ? 12 : 8);
+      label.center.set(0.5, 0);
+
+      const group = new THREE.Group();
+      group.add(mesh);
+      group.add(label);
+      return group;
+    },
+    [selectedNodeId, connectedIds]
+  );
+
+  // Edge color based on category
+  const getCategoryEdgeColor = (label: string): string => {
+    switch (label) {
+      case 'belongs to': return '#14b8a6';
+      case 'assigned to': case 'supports': return '#f89020';
+      case 'billed to': return '#3b82f6';
+      case 'located at': return '#8b5cf6';
+      case 'deployed at': return '#22c55e';
+      case 'regular hours': return '#ef4444';
+      case 'overtime hours': return '#f59e0b';
+      case 'double time hours': return '#eab308';
+      default: return '#6b7280';
+    }
+  };
 
   return (
-    <div className="h-screen font-display flex flex-col overflow-hidden" style={{ background: '#111827' }}>
+    <div className="h-screen font-display flex flex-col overflow-hidden" style={{ background: '#0f172a' }}>
       {/* Header */}
       <header className="bg-secondary-500/90 backdrop-blur text-white px-6 py-3 flex items-center gap-4 relative z-30 flex-shrink-0">
         <button
@@ -669,7 +690,7 @@ export function DataGraphPage() {
           </p>
         </div>
         <button
-          onClick={() => resetCameraRef.current?.()}
+          onClick={handleResetView}
           className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-sm"
           title="Reset camera"
         >
@@ -678,48 +699,179 @@ export function DataGraphPage() {
         </button>
       </header>
 
-      {/* Canvas — fills all remaining space */}
-      <div className="flex-1 relative">
-        {/* Faint ServiceCore watermark */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 select-none">
-          <span
-            className="text-[8vw] font-black uppercase tracking-[0.2em]"
-            style={{ color: 'rgba(255,255,255,0.03)' }}
-          >
-            ServiceCore
-          </span>
+      {/* Canvas container */}
+      <div className="flex-1 relative" ref={containerRef}>
+        {/* Faint SERVICECORE watermark */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none',
+            zIndex: 5,
+            userSelect: 'none',
+            fontSize: '8vw',
+            fontWeight: 900,
+            textTransform: 'uppercase',
+            letterSpacing: '0.3em',
+            color: 'rgba(0, 255, 65, 0.04)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          SERVICECORE
         </div>
 
-        <Canvas
-          camera={{ position: [0, 0, 40], fov: 60 }}
-          style={{ background: '#111827', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-          onPointerMissed={() => setSelectedId(null)}
-        >
-          <GraphScene
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            onResetCamera={resetCameraRef}
-          />
-        </Canvas>
+        <ForceGraph3D
+          ref={fgRef}
+          graphData={graphData}
+          nodeThreeObject={nodeThreeObject}
+          nodeThreeObjectExtend={false}
+          backgroundColor="#0f172a"
+          width={dimensions.width}
+          height={dimensions.height - 88}
+          onNodeClick={handleNodeClick}
+          onBackgroundClick={handleBackgroundClick}
+          onNodeDrag={(node: any) => {
+            node.fx = node.x;
+            node.fy = node.y;
+            node.fz = node.z;
+          }}
+          onNodeDragEnd={(node: any) => {
+            node.fx = undefined;
+            node.fy = undefined;
+            node.fz = undefined;
+          }}
+          linkColor={(link: any) => {
+            const linkLabel = link.label || '';
+            const baseColor = getCategoryEdgeColor(linkLabel);
+            if (!selectedNodeId) return baseColor + '40';
+            const src = typeof link.source === 'object' ? link.source.id : link.source;
+            const tgt = typeof link.target === 'object' ? link.target.id : link.target;
+            const touches = src === selectedNodeId || tgt === selectedNodeId;
+            if (touches) return baseColor + 'FF';
+            if (pulsingLinks.has(link.linkId)) return baseColor + 'CC';
+            return baseColor + '10';
+          }}
+          linkWidth={(link: any) => {
+            if (selectedNodeId) {
+              const src = typeof link.source === 'object' ? link.source.id : link.source;
+              const tgt = typeof link.target === 'object' ? link.target.id : link.target;
+              if (src === selectedNodeId || tgt === selectedNodeId) return 3.5;
+              if (pulsingLinks.has(link.linkId)) return 2.5;
+              return 0.3;
+            }
+            return 0.6;
+          }}
+          linkOpacity={0.6}
+          linkDirectionalParticles={(link: any) => {
+            if (pulsingLinks.has(link.linkId)) return 6;
+            return 0;
+          }}
+          linkDirectionalParticleSpeed={0.02}
+          linkDirectionalParticleWidth={(link: any) => {
+            if (pulsingLinks.has(link.linkId)) return 4;
+            return 0;
+          }}
+          linkDirectionalParticleColor={() => PULSE_YELLOW}
+          enableNodeDrag={true}
+          enableNavigationControls={true}
+          showNavInfo={false}
+          warmupTicks={80}
+          cooldownTicks={200}
+        />
 
-        {/* Info Panel */}
-        {selectedId && <InfoPanel nodeId={selectedId} />}
+        {/* Insight Panel — slides in from right */}
+        {selectedNode && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              width: 300,
+              maxHeight: 'calc(100% - 32px)',
+              overflowY: 'auto',
+              background: 'rgba(15, 23, 42, 0.95)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 12,
+              padding: 0,
+              zIndex: 20,
+              color: '#fff',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              animation: 'slideInRight 0.25s ease-out',
+            }}
+          >
+            {/* Node info header */}
+            <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: selectedNode.color, flexShrink: 0 }} />
+                <span style={{ fontWeight: 700, fontSize: 15 }}>{selectedNode.label}</span>
+              </div>
+              <div style={{ fontSize: 12, color: '#94a3b8', marginLeft: 18 }}>{selectedNode.category}</div>
+              {selectedNode.detail && (
+                <div style={{ fontSize: 12, color: '#cbd5e1', marginLeft: 18, marginTop: 2 }}>{selectedNode.detail}</div>
+              )}
+            </div>
+
+            {/* Connections */}
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748b', fontWeight: 600, marginBottom: 8 }}>
+                Connections ({selectedConnections.length})
+              </div>
+              {Object.entries(groupedConnections).map(([rel, names]) => (
+                <div key={rel} style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, color: '#94a3b8', fontStyle: 'italic', marginBottom: 2 }}>{rel}</div>
+                  {names.slice(0, 8).map((name, i) => (
+                    <div key={i} style={{ fontSize: 12, color: '#e2e8f0', paddingLeft: 10, lineHeight: '1.6' }}>{name}</div>
+                  ))}
+                  {names.length > 8 && (
+                    <div style={{ fontSize: 11, color: '#64748b', paddingLeft: 10 }}>+{names.length - 8} more</div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Insight */}
+            <div style={{ padding: '12px 16px 16px' }}>
+              <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748b', fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span role="img" aria-label="insight">&#x1F4A1;</span> Insight
+              </div>
+              <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: '1.6' }}>
+                {generateInsight(selectedNode, selectedConnections)}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Legend + Controls — compact footer */}
+      {/* Legend — compact footer */}
       <div className="bg-gray-900/90 backdrop-blur border-t border-gray-800 px-6 py-2 flex items-center justify-between relative z-30 flex-shrink-0">
         <div className="flex flex-wrap items-center gap-3">
           {LEGEND_ITEMS.map(item => (
             <div key={item.label} className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{
+                  backgroundColor: item.color,
+                  border: item.border ? '1px solid rgba(255,255,255,0.3)' : undefined,
+                }}
+              />
               <span className="text-gray-400 text-[11px]">{item.label}</span>
             </div>
           ))}
         </div>
         <span className="text-gray-600 text-[11px] hidden md:block">
-          Drag: rotate · Right-drag: pan · Scroll: zoom · Click: select
+          Drag: rotate &middot; Right-drag: pan &middot; Scroll: zoom &middot; Click: select
         </span>
       </div>
+
+      {/* Animation keyframes */}
+      <style>{`
+        @keyframes slideInRight {
+          from { transform: translateX(20px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

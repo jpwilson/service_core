@@ -10,6 +10,12 @@ import { CostsSecurityPage } from './pages/CostsSecurityPage'
 import { MarketingPage } from './pages/MarketingPage'
 import { RequireAuth } from './auth/RequireAuth'
 import { HelpAgent } from './components/agent/HelpAgent'
+import { initPostHog } from './lib/posthog'
+import { initSentry } from './lib/sentry'
+
+// Initialize observability (no-op without env vars)
+initSentry()
+initPostHog()
 
 const DataGraphPage = lazy(() => import('./pages/DataGraphPage').then(m => ({ default: m.DataGraphPage })))
 

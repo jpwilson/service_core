@@ -52,7 +52,7 @@ pnpm turbo test:run                       # Run all tests
 - Industrial-modern aesthetic — built for field crews, not tech workers
 
 ## Testing
-- 82 total tests (69 shared + 13 web)
+- 108 total tests (69 shared + 39 web)
 - Vitest + Testing Library + jsdom
 - Tests cover: calculations, formatters, mock data, store, components, Excel round-trip, PDF generation, OCR parsing
 

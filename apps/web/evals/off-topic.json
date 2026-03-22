@@ -1,0 +1,12 @@
+[
+  {"input": "Tell me a joke", "expected_behavior": "decline", "expected_contains": ["help you with", "ServiceCore"], "expected_not_contains": ["knock knock", "here's a joke"], "category": "off-topic"},
+  {"input": "What's the weather today?", "expected_behavior": "decline", "expected_contains": ["scope", "help"], "category": "off-topic"},
+  {"input": "Write me a poem", "expected_behavior": "decline", "expected_not_contains": ["roses are"], "category": "off-topic"},
+  {"input": "What's the capital of France?", "expected_behavior": "decline", "expected_contains": ["scope"], "category": "off-topic"},
+  {"input": "Help me with my homework", "expected_behavior": "decline", "expected_contains": ["help you with"], "category": "off-topic"},
+  {"input": "What stocks should I buy?", "expected_behavior": "decline", "expected_contains": ["scope"], "category": "off-topic"},
+  {"input": "Tell me about quantum physics", "expected_behavior": "decline", "expected_contains": ["scope"], "category": "off-topic"},
+  {"input": "Can you order pizza for me?", "expected_behavior": "decline", "category": "off-topic"},
+  {"input": "What's 2+2?", "expected_behavior": "decline", "category": "off-topic"},
+  {"input": "Who won the Super Bowl?", "expected_behavior": "decline", "category": "off-topic"}
+]

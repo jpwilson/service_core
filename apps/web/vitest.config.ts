@@ -8,5 +8,14 @@ export default defineConfig({
     setupFiles: ['./src/test-setup.ts'],
     globals: true,
     css: true,
+    coverage: {
+      provider: 'v8',
+      thresholds: {
+        statements: 70,
+        branches: 70,
+        functions: 70,
+        lines: 70,
+      },
+    },
   },
 });

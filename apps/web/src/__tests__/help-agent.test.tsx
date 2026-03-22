@@ -41,15 +41,17 @@ describe('HelpAgent', () => {
     expect(screen.getByText('ServiceCore Help')).toBeInTheDocument();
   });
 
-  it('has AI Chat and Guided Tour tabs', async () => {
+  it('has Chat, Glossary, Changelog, and Info tabs', async () => {
     const user = userEvent.setup();
     renderWithRouter(<HelpAgent />);
 
     const bubble = document.getElementById('help-bubble')!;
     await user.click(bubble);
 
-    expect(screen.getByText('AI Chat')).toBeInTheDocument();
-    expect(screen.getByText('Guided Tour')).toBeInTheDocument();
+    expect(screen.getByText('Chat')).toBeInTheDocument();
+    expect(screen.getByText('Glossary')).toBeInTheDocument();
+    expect(screen.getByText('Changelog')).toBeInTheDocument();
+    expect(screen.getByText('Info')).toBeInTheDocument();
   });
 });
 
