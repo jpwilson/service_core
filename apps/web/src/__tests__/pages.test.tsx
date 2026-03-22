@@ -69,17 +69,17 @@ describe('LoginPage', () => {
 
 describe('CostsSecurityPage', () => {
   it('renders Project Details header', () => {
-    renderWithRouter(<CostsSecurityPage />, { route: '/costs' });
+    renderWithRouter(<CostsSecurityPage />, { route: '/project-details' });
     expect(screen.getByText('Project Details')).toBeInTheDocument();
   });
 
   it('renders AI Models section', () => {
-    renderWithRouter(<CostsSecurityPage />, { route: '/costs' });
-    expect(screen.getByText('AI Models')).toBeInTheDocument();
+    renderWithRouter(<CostsSecurityPage />, { route: '/project-details' });
+    expect(screen.getByText('LLM Models')).toBeInTheDocument();
   });
 
   it('renders Infrastructure Costs section', () => {
-    renderWithRouter(<CostsSecurityPage />, { route: '/costs' });
+    renderWithRouter(<CostsSecurityPage />, { route: '/project-details' });
     expect(screen.getByText('Infrastructure Costs')).toBeInTheDocument();
   });
 });

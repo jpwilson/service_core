@@ -17,14 +17,16 @@ import {
   ChevronDown,
   ExternalLink,
   Megaphone,
+  Network,
 } from 'lucide-react';
 
-const AI_MODELS = [
+const LLM_MODELS = [
   {
     id: 'claude-sonnet-4-5',
     name: 'Claude Sonnet 4.5',
     provider: 'Anthropic (via OpenRouter)',
     useCase: 'Help Assistant Chatbot',
+    purpose: 'Primary — powers the in-app help chatbot',
     why: 'Best balance of quality and cost for conversational AI. Strong at following system prompts, resisting jailbreaks, and staying on-topic. Great for customer-facing chat.',
     cost: '~$3/1M input, $15/1M output tokens',
     active: true,
@@ -34,6 +36,7 @@ const AI_MODELS = [
     name: 'Claude Opus 4.6',
     provider: 'Anthropic (via OpenRouter)',
     useCase: 'Complex analysis (upgrade option)',
+    purpose: 'Available — for deep data analysis if needed',
     why: 'More capable for deep data analysis, multi-step reasoning, and complex payroll calculations. Higher cost but better for admin-facing advanced queries.',
     cost: '~$15/1M input, $75/1M output tokens',
     active: false,
@@ -43,6 +46,7 @@ const AI_MODELS = [
     name: 'Gemini 2.5 Pro',
     provider: 'Google',
     useCase: 'Ad Copy Generation (Marketing Pipeline)',
+    purpose: 'Experimental — used only in marketing ad pipeline',
     why: 'Strong creative writing for Facebook/Instagram ad copy. Good at following brand voice constraints and generating varied creative approaches. Free tier available.',
     cost: 'Free tier available, then pay-per-use',
     active: true,
@@ -52,6 +56,7 @@ const AI_MODELS = [
     name: 'Gemini 2.5 Flash',
     provider: 'Google',
     useCase: 'Ad Evaluation & Scoring',
+    purpose: 'Experimental — scores ads in marketing pipeline',
     why: 'Fast and cheap for evaluating ad quality across 5 dimensions. Good at structured scoring with consistent rubrics. Cost-efficient for batch processing 50+ ads.',
     cost: 'Free tier, very low cost',
     active: true,
@@ -61,6 +66,7 @@ const AI_MODELS = [
     name: 'Claude Haiku 4.5',
     provider: 'Anthropic',
     useCase: 'Lightweight tasks (fallback option)',
+    purpose: 'Available — fast fallback for simple queries',
     why: 'Fast responses for simple queries like "what page is X on?" or quick navigation help. Very low cost. Could replace Sonnet for simple help queries to save tokens.',
     cost: '~$0.25/1M input, $1.25/1M output tokens',
     active: false,
@@ -93,31 +99,80 @@ export function CostsSecurityPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
 
-        {/* Marketing Pipeline Link */}
-        <section className="bg-gradient-to-r from-secondary-500 to-secondary-400 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center">
-                <Megaphone className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-black uppercase">Sales & Marketing Pipeline</h2>
-                <p className="text-sm text-white/70 mt-1">
-                  Autonomous ad generation engine for Facebook & Instagram. Generate, evaluate, and optimize ServiceCore ads with AI.
-                </p>
+        {/* Experimental Tools */}
+        <section>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+              <Zap className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-secondary-500 uppercase">Experimental Tools</h2>
+              <p className="text-sm text-gray-500">Prototype features exploring new capabilities</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* Marketing Pipeline */}
+            <div className="bg-gradient-to-r from-secondary-500 to-secondary-400 rounded-xl p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center">
+                    <Megaphone className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="text-xl font-black uppercase">Sales & Marketing Pipeline</h3>
+                      <span className="bg-red-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full">Experimental</span>
+                    </div>
+                    <p className="text-sm text-white/70">
+                      Autonomous ad generation engine for Facebook & Instagram. Generate, evaluate, and optimize ServiceCore ads with AI.
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href="/marketing"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/marketing');
+                  }}
+                  className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-bold text-sm uppercase tracking-wide transition-colors flex items-center gap-2 flex-shrink-0"
+                >
+                  Open Pipeline
+                  <ExternalLink className="w-4 h-4" />
+                </a>
               </div>
             </div>
-            <a
-              href="/marketing"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate('/marketing');
-              }}
-              className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-bold text-sm uppercase tracking-wide transition-colors flex items-center gap-2 flex-shrink-0"
-            >
-              Open Pipeline
-              <ExternalLink className="w-4 h-4" />
-            </a>
+
+            {/* Data Visualization */}
+            <div className="bg-gradient-to-r from-secondary-500 to-secondary-400 rounded-xl p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+                    <Network className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="text-xl font-black uppercase">Data Visualization Graph</h3>
+                      <span className="bg-red-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full">Experimental</span>
+                    </div>
+                    <p className="text-sm text-white/70">
+                      An experimental 3D graph of every data point in this project. Over time, unexpected relationships between different elements may be uncovered.
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href="/graphs"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/graphs');
+                  }}
+                  className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-bold text-sm uppercase tracking-wide transition-colors flex items-center gap-2 flex-shrink-0"
+                >
+                  Open Graph
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -128,13 +183,13 @@ export function CostsSecurityPage() {
               <Bot className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-secondary-500 uppercase">AI Models</h2>
-              <p className="text-sm text-gray-500">Models used across ServiceCore and their roles</p>
+              <h2 className="text-2xl font-black text-secondary-500 uppercase">LLM Models</h2>
+              <p className="text-sm text-gray-500">Large language models used across ServiceCore and their roles</p>
             </div>
           </div>
 
           <div className="space-y-3">
-            {AI_MODELS.map((model) => (
+            {LLM_MODELS.map((model) => (
               <div key={model.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <button
                   onClick={() => setExpandedModel(expandedModel === model.id ? null : model.id)}
@@ -151,7 +206,7 @@ export function CostsSecurityPage() {
                     <span className={`text-xs font-medium px-2 py-1 rounded-full ${
                       model.active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'
                     }`}>
-                      {model.active ? 'Active' : 'Available'}
+                      {model.active ? 'In Use' : 'Available'}
                     </span>
                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${
                       expandedModel === model.id ? 'rotate-180' : ''
@@ -160,6 +215,11 @@ export function CostsSecurityPage() {
                 </button>
                 {expandedModel === model.id && (
                   <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+                    <div className="mb-3">
+                      <span className="text-xs font-semibold text-pink-600 border-b-2 border-pink-300 pb-0.5">
+                        {model.purpose}
+                      </span>
+                    </div>
                     <div className="grid md:grid-cols-3 gap-4">
                       <div>
                         <p className="text-xs font-bold text-gray-500 uppercase mb-1">Use Case</p>

@@ -221,7 +221,7 @@ function App() {
           {/* Project Details Link — admin/manager only */}
           {role !== 'driver' && (
             <button
-              onClick={() => navigate('/costs')}
+              onClick={() => navigate('/project-details')}
               className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-colors"
             >
               <Shield className="w-4 h-4" />

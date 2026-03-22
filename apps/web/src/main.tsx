@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import { StrictMode, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
@@ -10,6 +10,8 @@ import { CostsSecurityPage } from './pages/CostsSecurityPage'
 import { MarketingPage } from './pages/MarketingPage'
 import { RequireAuth } from './auth/RequireAuth'
 import { HelpAgent } from './components/agent/HelpAgent'
+
+const DataGraphPage = lazy(() => import('./pages/DataGraphPage').then(m => ({ default: m.DataGraphPage })))
 
 function AuthenticatedLayout() {
   return (
@@ -29,8 +31,9 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/login" element={<LoginPage />} />
           <Route element={<AuthenticatedLayout />}>
             <Route path="/app" element={<App />} />
-            <Route path="/costs" element={<CostsSecurityPage />} />
+            <Route path="/project-details" element={<CostsSecurityPage />} />
             <Route path="/marketing" element={<MarketingPage />} />
+            <Route path="/graphs" element={<Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="text-lg text-gray-500">Loading graph...</div></div>}><DataGraphPage /></Suspense>} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
