@@ -14,7 +14,7 @@ interface AppState {
   timeClockTab: 'time' | 'schedule' | 'profile';
   currentEmployeeId: string;
   selectedEmployeeId: string | null;
-  dashboardTab: 'overview' | 'hours' | 'attendance' | 'labor-cost' | 'projects' | 'employees' | 'import' | 'approvals' | 'settings' | 'routes' | 'scheduling' | 'customers' | 'equipment' | 'invoices' | 'quickbooks' | 'audit';
+  dashboardTab: 'overview' | 'hours' | 'attendance' | 'labor-cost' | 'projects' | 'employees' | 'import' | 'approvals' | 'settings' | 'routes' | 'scheduling' | 'customers' | 'equipment' | 'invoices' | 'quickbooks' | 'audit' | 'timeclock';
   dateRange: DateRange;
   settings: AppSettings;
   timesheetApprovals: Map<string, TimesheetStatus>;

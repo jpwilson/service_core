@@ -18,7 +18,7 @@ export const DEMO_USERS: DemoUser[] = [
     role: 'admin',
     employeeId: 'emp-014',
     avatar: '#f89020',
-    description: 'HR Administrator - Full access to all dashboards, payroll, and settings',
+    description: 'Administrator — Full access: dashboard, analytics, approvals, invoicing, settings, and all management tools',
   },
   {
     id: 'demo-driver',
@@ -27,7 +27,7 @@ export const DEMO_USERS: DemoUser[] = [
     role: 'driver',
     employeeId: 'emp-001',
     avatar: '#3b82f6',
-    description: 'Senior Driver - Time clock, personal hours, and route tracking',
+    description: 'Driver — Time clock, daily route planning, schedule view, and equipment status',
   },
   {
     id: 'demo-manager',
@@ -36,7 +36,7 @@ export const DEMO_USERS: DemoUser[] = [
     role: 'manager',
     employeeId: 'emp-014',
     avatar: '#dc2626',
-    description: 'Operations Manager - Team oversight, approvals, and reporting',
+    description: 'Operations Manager — Full access: crew scheduling, approvals, customers, invoicing, analytics, and reporting',
   },
 ];
 

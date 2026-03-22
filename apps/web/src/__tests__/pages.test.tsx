@@ -24,9 +24,8 @@ describe('LandingPage', () => {
 
   it('renders the hero headline text', () => {
     renderWithRouter(<LandingPage />);
-    expect(screen.getByText('The Ultimate')).toBeInTheDocument();
-    expect(screen.getByText('Employee Time Tracking')).toBeInTheDocument();
-    expect(screen.getByText('Software')).toBeInTheDocument();
+    expect(screen.getByText('The Complete')).toBeInTheDocument();
+    expect(screen.getByText('Operations Platform')).toBeInTheDocument();
   });
 
   it('has login/CTA buttons', () => {

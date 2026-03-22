@@ -41,80 +41,80 @@ interface RouteGeometry {
   coordinates: [number, number][]; // [lng, lat] pairs from OSRM
 }
 
-// ─── 50 Service Locations (Tucson metro area) ─────────────────────
+// ─── 50 Service Locations (Colorado Front Range) ──────────────────
 
 const SERVICE_LOCATIONS: ServiceLocation[] = [
   // Construction Sites (12)
-  { id: 'loc-01', name: 'Downtown Highrise Project', address: '75 E Broadway Blvd, Tucson, AZ', lat: 32.2217, lng: -110.9695, type: 'construction', units: 4, lastService: '2 days ago', priority: 'high' },
-  { id: 'loc-02', name: 'Houghton Rd Widening', address: '8500 E Houghton Rd, Tucson, AZ', lat: 32.1780, lng: -110.7310, type: 'construction', units: 6, lastService: 'yesterday', priority: 'high' },
-  { id: 'loc-03', name: 'Oro Valley Subdivision', address: '1200 W Lambert Ln, Oro Valley, AZ', lat: 32.3950, lng: -110.9800, type: 'construction', units: 8, lastService: '3 days ago', priority: 'high' },
-  { id: 'loc-04', name: 'Kolb & 22nd Retail Build', address: '7200 E 22nd St, Tucson, AZ', lat: 32.2050, lng: -110.8200, type: 'construction', units: 3, lastService: 'yesterday', priority: 'medium' },
-  { id: 'loc-05', name: 'Marana Town Center', address: '12100 N Cortaro Rd, Marana, AZ', lat: 32.4200, lng: -111.1000, type: 'construction', units: 5, lastService: '4 days ago', priority: 'high' },
-  { id: 'loc-06', name: 'Valencia Rd Bridge Repair', address: '3400 W Valencia Rd, Tucson, AZ', lat: 32.1380, lng: -111.0200, type: 'construction', units: 2, lastService: 'today', priority: 'low' },
-  { id: 'loc-07', name: 'Grant Rd Resurfacing', address: '2800 E Grant Rd, Tucson, AZ', lat: 32.2520, lng: -110.9300, type: 'construction', units: 3, lastService: '2 days ago', priority: 'medium' },
-  { id: 'loc-08', name: 'Tangerine Rd Extension', address: '14000 N Tangerine Rd, Marana, AZ', lat: 32.4530, lng: -111.0700, type: 'construction', units: 4, lastService: '5 days ago', priority: 'high' },
-  { id: 'loc-09', name: 'Speedway Demolition Site', address: '4100 E Speedway Blvd, Tucson, AZ', lat: 32.2360, lng: -110.8900, type: 'construction', units: 2, lastService: 'yesterday', priority: 'medium' },
-  { id: 'loc-10', name: 'Sahuarita New Homes Phase 3', address: '15800 S Rancho Sahuarita Blvd, Sahuarita, AZ', lat: 31.9400, lng: -110.9600, type: 'construction', units: 10, lastService: '3 days ago', priority: 'high' },
-  { id: 'loc-11', name: 'River Rd Apartment Complex', address: '3200 E River Rd, Tucson, AZ', lat: 32.2820, lng: -110.9400, type: 'construction', units: 6, lastService: '2 days ago', priority: 'medium' },
-  { id: 'loc-12', name: 'Ajo Way Warehouse Build', address: '2100 W Ajo Way, Tucson, AZ', lat: 32.1800, lng: -111.0100, type: 'construction', units: 3, lastService: 'yesterday', priority: 'low' },
+  { id: 'loc-01', name: 'I-70 Bridge Replacement', address: '2400 I-70 Frontage Rd, Idaho Springs, CO', lat: 39.7425, lng: -105.5134, type: 'construction', units: 4, lastService: '2 days ago', priority: 'high' },
+  { id: 'loc-02', name: 'DIA Terminal Expansion', address: '8500 Pena Blvd, Denver, CO', lat: 39.8561, lng: -104.6737, type: 'construction', units: 6, lastService: 'yesterday', priority: 'high' },
+  { id: 'loc-03', name: 'RiNo Development Phase 3', address: '3500 Brighton Blvd, Denver, CO', lat: 39.7710, lng: -104.9780, type: 'construction', units: 8, lastService: '3 days ago', priority: 'high' },
+  { id: 'loc-04', name: 'Boulder Flatirons Trailhead Rebuild', address: '1800 Table Mesa Dr, Boulder, CO', lat: 39.9878, lng: -105.2810, type: 'construction', units: 3, lastService: 'yesterday', priority: 'medium' },
+  { id: 'loc-05', name: 'Colorado Springs Switchbacks Stadium', address: '6100 Tutt Blvd, Colorado Springs, CO', lat: 38.8876, lng: -104.7598, type: 'construction', units: 5, lastService: '4 days ago', priority: 'high' },
+  { id: 'loc-06', name: 'I-25 South Gap Project', address: '1000 I-25 Frontage Rd, Castle Rock, CO', lat: 39.3722, lng: -104.8608, type: 'construction', units: 2, lastService: 'today', priority: 'low' },
+  { id: 'loc-07', name: 'Fort Collins Mulberry Bridge', address: '2200 E Mulberry St, Fort Collins, CO', lat: 40.5853, lng: -105.0445, type: 'construction', units: 3, lastService: '2 days ago', priority: 'medium' },
+  { id: 'loc-08', name: 'Greeley West Subdivision', address: '5500 W 29th St, Greeley, CO', lat: 40.4150, lng: -104.7530, type: 'construction', units: 4, lastService: '5 days ago', priority: 'high' },
+  { id: 'loc-09', name: 'Pueblo Riverwalk Expansion', address: '101 S Union Ave, Pueblo, CO', lat: 38.2650, lng: -104.6120, type: 'construction', units: 2, lastService: 'yesterday', priority: 'medium' },
+  { id: 'loc-10', name: 'Arvada Olde Town Redevelopment', address: '7300 Grandview Ave, Arvada, CO', lat: 39.8028, lng: -105.0875, type: 'construction', units: 10, lastService: '3 days ago', priority: 'high' },
+  { id: 'loc-11', name: 'Longmont Main St Renovation', address: '350 Main St, Longmont, CO', lat: 40.1672, lng: -105.1019, type: 'construction', units: 6, lastService: '2 days ago', priority: 'medium' },
+  { id: 'loc-12', name: 'Loveland Outlet Mall Build', address: '5800 McWhinney Blvd, Loveland, CO', lat: 40.4125, lng: -105.0530, type: 'construction', units: 3, lastService: 'yesterday', priority: 'low' },
 
   // Events (10)
-  { id: 'loc-13', name: 'U of A Football Tailgate', address: '1303 E University Blvd, Tucson, AZ', lat: 32.2319, lng: -110.9501, type: 'event', units: 12, lastService: 'today', priority: 'high' },
-  { id: 'loc-14', name: 'Tucson Rodeo Grounds', address: '4823 S 6th Ave, Tucson, AZ', lat: 32.1700, lng: -110.9650, type: 'event', units: 20, lastService: 'today', priority: 'high' },
-  { id: 'loc-15', name: '4th Ave Street Fair', address: '400 N 4th Ave, Tucson, AZ', lat: 32.2280, lng: -110.9660, type: 'event', units: 15, lastService: 'today', priority: 'high' },
-  { id: 'loc-16', name: 'Reid Park Concert Series', address: '900 S Randolph Way, Tucson, AZ', lat: 32.2100, lng: -110.9310, type: 'event', units: 8, lastService: '2 days ago', priority: 'medium' },
-  { id: 'loc-17', name: 'Oro Valley Music Festival', address: '11000 N La Cañada Dr, Oro Valley, AZ', lat: 32.3909, lng: -110.9665, type: 'event', units: 10, lastService: '3 days ago', priority: 'medium' },
-  { id: 'loc-18', name: 'Pima County Fairgrounds', address: '11300 S Houghton Rd, Tucson, AZ', lat: 32.1300, lng: -110.7350, type: 'event', units: 18, lastService: 'yesterday', priority: 'high' },
-  { id: 'loc-19', name: 'Rillito Racetrack', address: '4502 N 1st Ave, Tucson, AZ', lat: 32.2730, lng: -110.9700, type: 'event', units: 8, lastService: '4 days ago', priority: 'low' },
-  { id: 'loc-20', name: 'Kino Sports Complex', address: '2500 E Ajo Way, Tucson, AZ', lat: 32.1810, lng: -110.9400, type: 'event', units: 14, lastService: 'yesterday', priority: 'medium' },
-  { id: 'loc-21', name: 'Tucson Convention Center', address: '260 S Church Ave, Tucson, AZ', lat: 32.2180, lng: -110.9730, type: 'event', units: 10, lastService: 'today', priority: 'high' },
-  { id: 'loc-22', name: 'Marana Heritage Farm Festival', address: '12300 N Sandario Rd, Marana, AZ', lat: 32.4363, lng: -111.1547, type: 'event', units: 6, lastService: '5 days ago', priority: 'low' },
+  { id: 'loc-13', name: 'Red Rocks Concert Season', address: '18300 W Alameda Pkwy, Morrison, CO', lat: 39.6654, lng: -105.2057, type: 'event', units: 12, lastService: 'today', priority: 'high' },
+  { id: 'loc-14', name: 'Coors Field Service Area', address: '2001 Blake St, Denver, CO', lat: 39.7559, lng: -104.9942, type: 'event', units: 20, lastService: 'today', priority: 'high' },
+  { id: 'loc-15', name: 'Cherry Creek Arts Festival', address: '2500 E 1st Ave, Denver, CO', lat: 39.7185, lng: -104.9535, type: 'event', units: 15, lastService: 'today', priority: 'high' },
+  { id: 'loc-16', name: 'Empower Field at Mile High', address: '1701 Bryant St, Denver, CO', lat: 39.7439, lng: -105.0201, type: 'event', units: 8, lastService: '2 days ago', priority: 'medium' },
+  { id: 'loc-17', name: 'Boulder Creek Festival', address: '1200 Canyon Blvd, Boulder, CO', lat: 40.0176, lng: -105.2797, type: 'event', units: 10, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-18', name: 'Colorado State Fair', address: '1001 Beulah Ave, Pueblo, CO', lat: 38.2575, lng: -104.6285, type: 'event', units: 18, lastService: 'yesterday', priority: 'high' },
+  { id: 'loc-19', name: 'Greeley Stampede Grounds', address: '501 N 14th Ave, Greeley, CO', lat: 40.4300, lng: -104.6920, type: 'event', units: 8, lastService: '4 days ago', priority: 'low' },
+  { id: 'loc-20', name: 'DICK\'s Sporting Goods Park', address: '6000 Victory Way, Commerce City, CO', lat: 39.8056, lng: -104.8917, type: 'event', units: 14, lastService: 'yesterday', priority: 'medium' },
+  { id: 'loc-21', name: 'Colorado Convention Center', address: '700 14th St, Denver, CO', lat: 39.7427, lng: -104.9958, type: 'event', units: 10, lastService: 'today', priority: 'high' },
+  { id: 'loc-22', name: 'Larimer County Fair', address: '5280 Arena Cir, Loveland, CO', lat: 40.3980, lng: -105.0750, type: 'event', units: 6, lastService: '5 days ago', priority: 'low' },
 
   // Parks & Recreation (8)
-  { id: 'loc-23', name: 'Catalina State Park', address: '11570 N Oracle Rd, Tucson, AZ', lat: 32.3950, lng: -110.9200, type: 'park', units: 4, lastService: '3 days ago', priority: 'medium' },
-  { id: 'loc-24', name: 'Saguaro National Park East', address: '3693 S Old Spanish Trail, Tucson, AZ', lat: 32.1800, lng: -110.7370, type: 'park', units: 6, lastService: '4 days ago', priority: 'medium' },
-  { id: 'loc-25', name: 'Tucson Mountain Park', address: '1548 S Kinney Rd, Tucson, AZ', lat: 32.2200, lng: -111.1100, type: 'park', units: 4, lastService: '5 days ago', priority: 'low' },
-  { id: 'loc-26', name: 'Brandi Fenton Memorial Park', address: '3482 E River Rd, Tucson, AZ', lat: 32.2830, lng: -110.9200, type: 'park', units: 3, lastService: '2 days ago', priority: 'medium' },
-  { id: 'loc-27', name: 'Udall Park', address: '7200 E Tanque Verde Rd, Tucson, AZ', lat: 32.2530, lng: -110.8200, type: 'park', units: 2, lastService: 'yesterday', priority: 'low' },
-  { id: 'loc-28', name: 'Kennedy Park', address: '3600 S La Cholla Blvd, Tucson, AZ', lat: 32.1570, lng: -111.0400, type: 'park', units: 3, lastService: '3 days ago', priority: 'medium' },
-  { id: 'loc-29', name: 'Agua Caliente Park', address: '12325 E Roger Rd, Tucson, AZ', lat: 32.2700, lng: -110.7400, type: 'park', units: 2, lastService: '6 days ago', priority: 'high' },
-  { id: 'loc-30', name: 'Silverbell Lake Park', address: '5600 N Silverbell Rd, Tucson, AZ', lat: 32.2900, lng: -111.0600, type: 'park', units: 2, lastService: '4 days ago', priority: 'low' },
+  { id: 'loc-23', name: 'Washington Park', address: '701 S Franklin St, Denver, CO', lat: 39.6975, lng: -104.9725, type: 'park', units: 4, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-24', name: 'Chatfield State Park', address: '11500 N Roxborough Park Rd, Littleton, CO', lat: 39.5326, lng: -105.0707, type: 'park', units: 6, lastService: '4 days ago', priority: 'medium' },
+  { id: 'loc-25', name: 'Garden of the Gods', address: '1805 N 30th St, Colorado Springs, CO', lat: 38.8786, lng: -104.8698, type: 'park', units: 4, lastService: '5 days ago', priority: 'low' },
+  { id: 'loc-26', name: 'Cherry Creek State Park', address: '4201 S Parker Rd, Aurora, CO', lat: 39.6397, lng: -104.8520, type: 'park', units: 3, lastService: '2 days ago', priority: 'medium' },
+  { id: 'loc-27', name: 'Boyd Lake State Park', address: '3720 N County Rd 11C, Loveland, CO', lat: 40.4300, lng: -105.0450, type: 'park', units: 2, lastService: 'yesterday', priority: 'low' },
+  { id: 'loc-28', name: 'Lory State Park', address: '708 Lodgepole Dr, Bellvue, CO', lat: 40.5850, lng: -105.1730, type: 'park', units: 3, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-29', name: 'Roxborough State Park', address: '4751 E Roxborough Dr, Littleton, CO', lat: 39.4312, lng: -105.0690, type: 'park', units: 2, lastService: '6 days ago', priority: 'high' },
+  { id: 'loc-30', name: 'Standley Lake Regional Park', address: '10300 W 88th Ave, Westminster, CO', lat: 39.8370, lng: -105.1200, type: 'park', units: 2, lastService: '4 days ago', priority: 'low' },
 
   // Commercial (8)
-  { id: 'loc-31', name: 'Tucson Mall Service Area', address: '4500 N Oracle Rd, Tucson, AZ', lat: 32.2672, lng: -110.9847, type: 'commercial', units: 2, lastService: 'yesterday', priority: 'low' },
-  { id: 'loc-32', name: 'Park Place Mall Loading', address: '5870 E Broadway Blvd, Tucson, AZ', lat: 32.2190, lng: -110.8600, type: 'commercial', units: 2, lastService: '2 days ago', priority: 'low' },
-  { id: 'loc-33', name: 'Auto Dealership Row', address: '4635 S Palo Verde Blvd, Tucson, AZ', lat: 32.1680, lng: -110.9500, type: 'commercial', units: 4, lastService: '3 days ago', priority: 'medium' },
-  { id: 'loc-34', name: 'Oracle Wetmore Plaza', address: '3900 N Oracle Rd, Tucson, AZ', lat: 32.2600, lng: -110.9830, type: 'commercial', units: 2, lastService: 'yesterday', priority: 'low' },
-  { id: 'loc-35', name: 'Broadway Village', address: '26 S Country Club Rd, Tucson, AZ', lat: 32.2200, lng: -110.9400, type: 'commercial', units: 1, lastService: '2 days ago', priority: 'low' },
-  { id: 'loc-36', name: 'Foothills Mall', address: '7401 N La Cholla Blvd, Tucson, AZ', lat: 32.3010, lng: -111.0400, type: 'commercial', units: 3, lastService: '4 days ago', priority: 'medium' },
-  { id: 'loc-37', name: 'Costco Business Center', address: '3901 E 44th St, Tucson, AZ', lat: 32.1900, lng: -110.9200, type: 'commercial', units: 2, lastService: 'yesterday', priority: 'low' },
-  { id: 'loc-38', name: 'El Con Center', address: '3601 E Broadway Blvd, Tucson, AZ', lat: 32.2200, lng: -110.9100, type: 'commercial', units: 2, lastService: '3 days ago', priority: 'low' },
+  { id: 'loc-31', name: 'Park Meadows Mall', address: '8401 Park Meadows Center Dr, Lone Tree, CO', lat: 39.5633, lng: -104.8838, type: 'commercial', units: 2, lastService: 'yesterday', priority: 'low' },
+  { id: 'loc-32', name: 'Cherry Creek Shopping Center', address: '3000 E 1st Ave, Denver, CO', lat: 39.7178, lng: -104.9530, type: 'commercial', units: 2, lastService: '2 days ago', priority: 'low' },
+  { id: 'loc-33', name: 'Flatiron Crossing Mall', address: '1 W Flatiron Crossing Dr, Broomfield, CO', lat: 39.9317, lng: -105.1310, type: 'commercial', units: 4, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-34', name: 'Colorado Mills Outlet', address: '14500 W Colfax Ave, Lakewood, CO', lat: 39.7385, lng: -105.1658, type: 'commercial', units: 2, lastService: 'yesterday', priority: 'low' },
+  { id: 'loc-35', name: 'Southlands Lifestyle Center', address: '6155 S Main St, Aurora, CO', lat: 39.5792, lng: -104.7140, type: 'commercial', units: 1, lastService: '2 days ago', priority: 'low' },
+  { id: 'loc-36', name: 'The Promenade Shops at Centerra', address: '5971 Sky Pond Dr, Loveland, CO', lat: 40.4045, lng: -105.0285, type: 'commercial', units: 3, lastService: '4 days ago', priority: 'medium' },
+  { id: 'loc-37', name: 'Belmar Shopping District', address: '464 S Teller St, Lakewood, CO', lat: 39.7100, lng: -105.0810, type: 'commercial', units: 2, lastService: 'yesterday', priority: 'low' },
+  { id: 'loc-38', name: 'The Shops at Northfield', address: '8340 Northfield Blvd, Denver, CO', lat: 39.7830, lng: -104.8980, type: 'commercial', units: 2, lastService: '3 days ago', priority: 'low' },
 
   // Residential Communities (6)
-  { id: 'loc-39', name: 'Catalina Foothills HOA', address: '6401 N Campbell Ave, Tucson, AZ', lat: 32.2827, lng: -110.9390, type: 'residential', units: 4, lastService: '2 days ago', priority: 'medium' },
-  { id: 'loc-40', name: 'Rita Ranch Community', address: '8900 S Rita Rd, Tucson, AZ', lat: 32.1127, lng: -110.8421, type: 'residential', units: 6, lastService: '3 days ago', priority: 'medium' },
-  { id: 'loc-41', name: 'Green Valley Retirement', address: '1070 S Calle De Las Casitas, Green Valley, AZ', lat: 31.8545, lng: -111.0002, type: 'residential', units: 4, lastService: '5 days ago', priority: 'low' },
-  { id: 'loc-42', name: 'Civano Community', address: '10501 E Drexel Rd, Tucson, AZ', lat: 32.1400, lng: -110.7800, type: 'residential', units: 3, lastService: '4 days ago', priority: 'medium' },
-  { id: 'loc-43', name: 'Dove Mountain Villas', address: '5700 W Dove Mountain Blvd, Marana, AZ', lat: 32.4100, lng: -111.1000, type: 'residential', units: 2, lastService: '6 days ago', priority: 'low' },
-  { id: 'loc-44', name: 'Vail Ranch Estates', address: '13400 E Old Spanish Trail, Vail, AZ', lat: 32.0600, lng: -110.7100, type: 'residential', units: 4, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-39', name: 'Stapleton Community', address: '7350 E 29th Ave, Denver, CO', lat: 39.7730, lng: -104.8950, type: 'residential', units: 4, lastService: '2 days ago', priority: 'medium' },
+  { id: 'loc-40', name: 'Green Valley Ranch', address: '4900 Himalaya Rd, Denver, CO', lat: 39.7835, lng: -104.7850, type: 'residential', units: 6, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-41', name: 'Highlands Ranch Community', address: '62 W Plaza Dr, Highlands Ranch, CO', lat: 39.5536, lng: -104.9696, type: 'residential', units: 4, lastService: '5 days ago', priority: 'low' },
+  { id: 'loc-42', name: 'Erie New Homes Development', address: '900 Briggs St, Erie, CO', lat: 40.0503, lng: -105.0500, type: 'residential', units: 3, lastService: '4 days ago', priority: 'medium' },
+  { id: 'loc-43', name: 'Castle Pines Village', address: '688 Happy Canyon Rd, Castle Pines, CO', lat: 39.4700, lng: -104.8935, type: 'residential', units: 2, lastService: '6 days ago', priority: 'low' },
+  { id: 'loc-44', name: 'Timnath Ranch Estates', address: '4400 Timnath Dr, Timnath, CO', lat: 40.5283, lng: -104.9860, type: 'residential', units: 4, lastService: '3 days ago', priority: 'medium' },
 
   // Municipal (3)
-  { id: 'loc-45', name: 'Tucson City Hall Annex', address: '255 W Alameda St, Tucson, AZ', lat: 32.2230, lng: -110.9740, type: 'municipal', units: 2, lastService: 'yesterday', priority: 'low' },
-  { id: 'loc-46', name: 'Pima County Courthouse', address: '115 N Church Ave, Tucson, AZ', lat: 32.2240, lng: -110.9720, type: 'municipal', units: 2, lastService: '2 days ago', priority: 'low' },
-  { id: 'loc-47', name: 'Fire Station 7 Training', address: '3940 N 1st Ave, Tucson, AZ', lat: 32.2600, lng: -110.9700, type: 'municipal', units: 3, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-45', name: 'Denver City Hall', address: '1437 Bannock St, Denver, CO', lat: 39.7392, lng: -104.9870, type: 'municipal', units: 2, lastService: 'yesterday', priority: 'low' },
+  { id: 'loc-46', name: 'Boulder County Courthouse', address: '1325 Pearl St, Boulder, CO', lat: 40.0190, lng: -105.2768, type: 'municipal', units: 2, lastService: '2 days ago', priority: 'low' },
+  { id: 'loc-47', name: 'Fort Collins City Hall', address: '300 Laporte Ave, Fort Collins, CO', lat: 40.5878, lng: -105.0770, type: 'municipal', units: 3, lastService: '3 days ago', priority: 'medium' },
 
   // Industrial (3)
-  { id: 'loc-48', name: 'Southside Recycling Yard', address: '4002 S Park Ave, Tucson, AZ', lat: 32.1823, lng: -110.9665, type: 'industrial', units: 4, lastService: '2 days ago', priority: 'medium' },
-  { id: 'loc-49', name: 'Airport Industrial Park', address: '6560 S Tucson Blvd, Tucson, AZ', lat: 32.1500, lng: -110.9400, type: 'industrial', units: 5, lastService: '3 days ago', priority: 'medium' },
-  { id: 'loc-50', name: 'Irvington Rd Solar Farm', address: '5200 W Irvington Rd, Tucson, AZ', lat: 32.1560, lng: -111.0500, type: 'industrial', units: 3, lastService: '4 days ago', priority: 'low' },
+  { id: 'loc-48', name: 'Commerce City Recycling', address: '6200 Quebec St, Commerce City, CO', lat: 39.8230, lng: -104.9085, type: 'industrial', units: 4, lastService: '2 days ago', priority: 'medium' },
+  { id: 'loc-49', name: 'DIA Cargo Area', address: '26500 E 75th Ave, Denver, CO', lat: 39.8400, lng: -104.6750, type: 'industrial', units: 5, lastService: '3 days ago', priority: 'medium' },
+  { id: 'loc-50', name: 'Pueblo Steel Mill Complex', address: '100 W B St, Pueblo, CO', lat: 38.2780, lng: -104.6180, type: 'industrial', units: 3, lastService: '4 days ago', priority: 'low' },
 ];
 
 const DEPOT: ServiceLocation = {
   id: 'depot',
-  name: 'Main Office / Yard',
-  address: '1200 N Alvernon Way, Tucson, AZ 85712',
-  lat: 32.2319,
-  lng: -110.9128,
+  name: 'ServiceCore Yard & Depot',
+  address: '4500 E 46th Ave, Denver, CO 80216',
+  lat: 39.7780,
+  lng: -104.9450,
   type: 'industrial',
   units: 0,
   lastService: '',
@@ -582,8 +582,8 @@ export function RoutePlanning() {
         {/* Map (spans 2 cols) */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 overflow-hidden" style={{ minHeight: 550 }}>
           <MapContainer
-            center={[32.2226, -110.9747]}
-            zoom={11}
+            center={[39.7392, -104.9903]}
+            zoom={9}
             style={{ height: '100%', width: '100%', minHeight: 550 }}
             scrollWheelZoom={true}
           >

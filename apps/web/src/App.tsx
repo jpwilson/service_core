@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from './store/useAppStore';
@@ -26,9 +27,7 @@ import {
   Settings as SettingsIcon,
   Upload,
   Wrench,
-  ChevronLeft,
   LogOut,
-  DollarSign,
   Shield,
   Route,
   CalendarDays,
@@ -39,10 +38,80 @@ import {
   ScrollText,
 } from 'lucide-react';
 
+type DashboardTab = 'overview' | 'hours' | 'attendance' | 'labor-cost' | 'projects' | 'employees' | 'import' | 'approvals' | 'settings' | 'routes' | 'scheduling' | 'customers' | 'equipment' | 'invoices' | 'quickbooks' | 'audit' | 'timeclock';
+
+type SidebarItem = {
+  id: DashboardTab;
+  label: string;
+  icon: typeof Clock;
+};
+
+// Define which sidebar items each role can see
+const ALL_SIDEBAR_ITEMS: SidebarItem[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'timeclock', label: 'Time Clock', icon: Clock },
+  { id: 'scheduling', label: 'Scheduling', icon: CalendarDays },
+  { id: 'routes', label: 'Route Planning', icon: Route },
+  { id: 'hours', label: 'Analytics', icon: BarChart3 },
+  { id: 'approvals', label: 'Approvals', icon: FileCheck },
+  { id: 'customers', label: 'Customers', icon: Users },
+  { id: 'equipment', label: 'Equipment', icon: Container },
+  { id: 'invoices', label: 'Invoices', icon: Receipt },
+  { id: 'import', label: 'Import', icon: Upload },
+  { id: 'quickbooks', label: 'Accounting', icon: FileOutput },
+  { id: 'audit', label: 'Audit Log', icon: ScrollText },
+  { id: 'settings', label: 'Settings', icon: SettingsIcon },
+];
+
+// Driver sees a focused set of tabs
+const DRIVER_TABS = new Set(['timeclock', 'scheduling', 'routes', 'equipment']);
+
+function getSidebarItems(role: string): SidebarItem[] {
+  if (role === 'driver') {
+    return ALL_SIDEBAR_ITEMS.filter((item) => DRIVER_TABS.has(item.id));
+  }
+  // admin and manager see everything
+  return ALL_SIDEBAR_ITEMS;
+}
+
+function getDefaultTab(role: string): DashboardTab {
+  return role === 'driver' ? 'timeclock' : 'overview';
+}
+
+function getHeaderTitle(tab: string, role: string): string {
+  if (role === 'driver') {
+    switch (tab) {
+      case 'timeclock': return 'Time Clock';
+      case 'scheduling': return 'My Schedule';
+      case 'routes': return 'Route Planning';
+      case 'equipment': return 'Equipment';
+      default: return 'ServiceCore';
+    }
+  }
+  switch (tab) {
+    case 'overview': return 'Operations Dashboard';
+    case 'timeclock': return 'Time Clock';
+    case 'hours':
+    case 'attendance':
+    case 'labor-cost':
+    case 'projects':
+    case 'employees': return 'Analytics';
+    case 'approvals': return 'Timesheet Approvals';
+    case 'scheduling': return 'Crew Scheduling';
+    case 'routes': return 'Route Planning';
+    case 'customers': return 'Customer Management';
+    case 'equipment': return 'Equipment Tracking';
+    case 'invoices': return 'Invoicing';
+    case 'import': return 'Data Import';
+    case 'quickbooks': return 'Accounting Export';
+    case 'audit': return 'Audit Log';
+    case 'settings': return 'Settings';
+    default: return 'Operations Dashboard';
+  }
+}
+
 function App() {
   const {
-    currentView,
-    setCurrentView,
     dashboardTab,
     setDashboardTab,
     selectedEmployeeId,
@@ -54,34 +123,21 @@ function App() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Set default tab based on role on mount
+  useEffect(() => {
+    if (user) {
+      const defaultTab = getDefaultTab(user.role);
+      setDashboardTab(defaultTab);
+    }
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  if (currentView === 'timeclock') {
-    return (
-      <>
-        <Toaster position="top-right" />
-        <TimeClock />
-      </>
-    );
-  }
-
-  const sidebarItems = [
-    { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
-    { id: 'hours' as const, label: 'Analytics', icon: BarChart3 },
-    { id: 'approvals' as const, label: 'Approvals', icon: FileCheck },
-    { id: 'scheduling' as const, label: 'Scheduling', icon: CalendarDays },
-    { id: 'routes' as const, label: 'Route Planning', icon: Route },
-    { id: 'customers' as const, label: 'Customers', icon: Users },
-    { id: 'equipment' as const, label: 'Equipment', icon: Container },
-    { id: 'invoices' as const, label: 'Invoices', icon: Receipt },
-    { id: 'import' as const, label: 'Import', icon: Upload },
-    { id: 'quickbooks' as const, label: 'Accounting', icon: FileOutput },
-    { id: 'audit' as const, label: 'Audit Log', icon: ScrollText },
-    { id: 'settings' as const, label: 'Settings', icon: SettingsIcon },
-  ];
+  const role = user?.role || 'admin';
+  const sidebarItems = getSidebarItems(role);
 
   const renderContent = () => {
     if (selectedEmployeeId) {
@@ -94,6 +150,8 @@ function App() {
     }
 
     switch (dashboardTab) {
+      case 'timeclock':
+        return <TimeClock embedded />;
       case 'overview':
         return <Overview />;
       case 'hours':
@@ -160,25 +218,17 @@ function App() {
             );
           })}
 
-          {/* Project Details Link */}
-          <button
-            onClick={() => navigate('/costs')}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-colors"
-          >
-            <Shield className="w-4 h-4" />
-            Project Details
-          </button>
+          {/* Project Details Link — admin/manager only */}
+          {role !== 'driver' && (
+            <button
+              onClick={() => navigate('/costs')}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+            >
+              <Shield className="w-4 h-4" />
+              Project Details
+            </button>
+          )}
         </nav>
-
-        <div className="px-3 py-2 border-t border-white/10">
-          <button
-            onClick={() => setCurrentView('timeclock')}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-colors"
-          >
-            <Clock className="w-4 h-4" />
-            Time Clock
-          </button>
-        </div>
 
         {/* User Info */}
         {user && (
@@ -192,7 +242,9 @@ function App() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-white truncate">{user.name}</div>
-                <div className="text-xs text-white/50 truncate">{user.email}</div>
+                <div className="text-xs text-white/50 truncate">
+                  {role === 'driver' ? 'Driver' : role === 'manager' ? 'Manager' : 'Administrator'}
+                </div>
               </div>
             </div>
             <button
@@ -211,25 +263,21 @@ function App() {
         {/* Top Header */}
         <header className="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setCurrentView('timeclock')}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
             <div className="lg:hidden flex items-center gap-2">
               <Wrench className="w-6 h-6 text-primary-500" style={{ transform: 'rotate(-90deg)' }} />
               <span className="font-bold text-secondary-500">ServiceCore</span>
             </div>
             <h2 className="hidden lg:block text-lg font-semibold text-secondary-500">
-              Payroll Dashboard
+              {getHeaderTitle(dashboardTab, role)}
             </h2>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden md:block">
-              <DateRangePicker value={dateRange} onChange={setDateRange} />
-            </div>
+            {role !== 'driver' && (
+              <div className="hidden md:block">
+                <DateRangePicker value={dateRange} onChange={setDateRange} />
+              </div>
+            )}
             <NotificationPanel />
             {/* Mobile user avatar */}
             {user && (
@@ -271,13 +319,6 @@ function App() {
               </button>
             );
           })}
-          <button
-            onClick={() => navigate('/costs')}
-            className="flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase whitespace-nowrap border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <DollarSign className="w-4 h-4" />
-            Costs
-          </button>
         </div>
 
         {/* Content Area */}

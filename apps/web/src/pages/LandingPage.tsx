@@ -5,12 +5,22 @@ import {
   Shield,
   Users,
   FileCheck,
-  Zap,
   ArrowRight,
   Wrench,
   CheckCircle,
   Phone,
-  Mail,
+  CalendarDays,
+  Route,
+  Container,
+  Receipt,
+  FileOutput,
+  Sparkles,
+  Upload,
+  Sun,
+  MapPin,
+  Truck,
+  ClipboardCheck,
+  Moon,
 } from 'lucide-react';
 
 export function LandingPage() {
@@ -89,16 +99,16 @@ export function LandingPage() {
         <div className="relative max-w-7xl mx-auto px-4 py-20 md:py-32">
           <div className="max-w-2xl">
             <h1 className="text-4xl md:text-6xl font-black text-white uppercase leading-tight mb-6">
-              <span className="text-primary-500">The Ultimate</span>
+              <span className="text-primary-500">The Complete</span>
               <br />
-              Employee Time Tracking
+              Operations Platform
               <br />
-              <span className="text-primary-500">Software</span>
+              <span className="text-primary-500">for Portable Sanitation</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-300 mb-8 leading-relaxed">
-              Make your portable toilet, septic, or roll-off business more efficient.
-              Cut wasted time on payroll, manage employee hours, automate overtime calculations,
-              and generate reports. All with one tool built for field service companies.
+              The complete operations platform for portable sanitation companies.
+              Track employee hours, plan service routes, manage equipment, invoice
+              customers, and run payroll — all from one dashboard.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button
@@ -123,10 +133,10 @@ export function LandingPage() {
       <section className="bg-primary-500 py-8">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
-            { value: '4-6 hrs', label: 'Saved Weekly on Payroll' },
-            { value: '99.9%', label: 'Calculation Accuracy' },
-            { value: '18', label: 'Employees Managed' },
-            { value: '24/7', label: 'Real-Time Visibility' },
+            { value: '4-6 hrs', label: 'Saved Weekly' },
+            { value: '50+', label: 'Service Locations' },
+            { value: '20', label: 'Units Tracked' },
+            { value: 'Real-Time', label: 'Routes' },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-3xl md:text-4xl font-black text-white">{stat.value}</div>
@@ -136,7 +146,80 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Features */}
+      {/* Your Day, Simplified */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-black text-secondary-500 uppercase mb-4">
+              Your Day, Simplified
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              From first dispatch to final export, ServiceCore handles every step
+              of your portable sanitation operation.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Sun,
+                time: 'Morning',
+                title: 'Dispatch Crews',
+                desc: 'Assign drivers and service techs from the weekly scheduling board. See who is available, drag to assign jobs across all your sites.',
+                color: 'bg-amber-50 text-amber-600',
+              },
+              {
+                icon: Route,
+                time: 'Route',
+                title: 'Optimize Service Routes',
+                desc: 'Plan the fastest path across 50+ service locations. Real-time maps show actual drive times so your trucks spend less time on the road.',
+                color: 'bg-blue-50 text-blue-600',
+              },
+              {
+                icon: Truck,
+                time: 'Field',
+                title: 'Track Drivers',
+                desc: 'Drivers clock in and out with GPS tracking. Automatic break deductions, mileage logging, and project tagging happen in real time.',
+                color: 'bg-green-50 text-green-600',
+              },
+              {
+                icon: Container,
+                time: 'Service',
+                title: 'Monitor Equipment',
+                desc: 'Track every porta-john, hand wash station, and restroom trailer. Know which units need servicing, which are deployed, and where.',
+                color: 'bg-purple-50 text-purple-600',
+              },
+              {
+                icon: ClipboardCheck,
+                time: 'Office',
+                title: 'Approve & Invoice',
+                desc: 'Managers review and approve timesheets with one click. Generate invoices from completed service hours, add tax, and send as PDF.',
+                color: 'bg-rose-50 text-rose-600',
+              },
+              {
+                icon: Moon,
+                time: 'End of Day',
+                title: 'Export & Analyze',
+                desc: 'Export payroll to QuickBooks, Xero, or ADP. Review analytics dashboards for labor costs, attendance patterns, and overtime trends.',
+                color: 'bg-indigo-50 text-indigo-600',
+              },
+            ].map((step) => (
+              <div key={step.title} className="bg-white border border-gray-200 rounded-xl p-8 hover:shadow-lg transition-shadow relative">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-12 h-12 ${step.color} rounded-lg flex items-center justify-center`}>
+                    <step.icon className="w-6 h-6" />
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-widest text-primary-500">{step.time}</span>
+                </div>
+                <h3 className="text-xl font-bold text-secondary-500 mb-3">{step.title}</h3>
+                <p className="text-gray-600 leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features — How It Works */}
       <section id="features" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
@@ -144,8 +227,8 @@ export function LandingPage() {
               How It Works
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              ServiceCore automates your entire employee time tracking and payroll workflow,
-              saving hours of manual spreadsheet work every week.
+              12 integrated tools built specifically for portable sanitation companies.
+              No more juggling spreadsheets, paper timesheets, and disconnected apps.
             </p>
           </div>
 
@@ -153,39 +236,75 @@ export function LandingPage() {
             {[
               {
                 icon: Clock,
-                title: 'Employee Time Clock',
-                desc: 'Simple clock in/out with project and task selection. GPS location tracking and automatic break deductions.',
+                title: 'Time Clock',
+                desc: 'Simple clock in/out with GPS location tracking. Automatic break deductions, project tagging, and mileage logging for every driver and service tech.',
                 color: 'bg-blue-50 text-blue-600',
               },
               {
-                icon: Zap,
-                title: 'Automatic Overtime',
-                desc: 'Calculates overtime based on your 40-hour work week rules. Daily and weekly thresholds with configurable multipliers.',
-                color: 'bg-orange-50 text-orange-600',
+                icon: CalendarDays,
+                title: 'Scheduling',
+                desc: 'Weekly dispatch board for assigning crews to job sites. Drag-and-drop scheduling across color-coded construction sites, events, and municipal routes.',
+                color: 'bg-amber-50 text-amber-600',
+              },
+              {
+                icon: Route,
+                title: 'Route Planning',
+                desc: 'Plan optimized service routes across 50+ locations. Real-time road routing shows actual drive times and distances between every stop on the route.',
+                color: 'bg-emerald-50 text-emerald-600',
+              },
+              {
+                icon: Container,
+                title: 'Equipment Tracking',
+                desc: 'Track every porta-john, hand wash station, and restroom trailer. Monitor condition, service dates, and deployment across all job sites.',
+                color: 'bg-purple-50 text-purple-600',
+              },
+              {
+                icon: Users,
+                title: 'Customer Management',
+                desc: 'Manage construction companies, event planners, and municipal contracts. Track service history and job sites for each customer.',
+                color: 'bg-pink-50 text-pink-600',
+              },
+              {
+                icon: Receipt,
+                title: 'Invoicing',
+                desc: 'Generate invoices directly from completed time entries. Add line items, calculate tax, and download professional PDF invoices for each customer.',
+                color: 'bg-teal-50 text-teal-600',
               },
               {
                 icon: FileCheck,
-                title: 'Manager Approvals',
-                desc: 'Streamlined timesheet approval workflow. Managers review, approve, or reject submissions with one click.',
+                title: 'Timesheet Approvals',
+                desc: 'Streamlined manager approval workflow for every timesheet. Review, approve, or reject submissions with anomaly flags for unusual entries.',
                 color: 'bg-green-50 text-green-600',
               },
               {
                 icon: BarChart3,
-                title: 'Real-Time Dashboard',
-                desc: 'See current logged hours, project time allocation, attendance patterns, and labor costs at a glance.',
-                color: 'bg-purple-50 text-purple-600',
-              },
-              {
-                icon: Mail,
-                title: 'Email Reminders',
-                desc: 'Automated reminders for timesheet submissions. Never chase employees for their hours again.',
-                color: 'bg-red-50 text-red-600',
+                title: 'Analytics',
+                desc: 'Five reporting views: hours breakdown, attendance patterns, labor costs by project, project allocation, and per-employee performance dashboards.',
+                color: 'bg-violet-50 text-violet-600',
               },
               {
                 icon: Shield,
                 title: 'Payroll Reports',
-                desc: 'Generate PDF reports with hours breakdown and gross pay calculations. Export to Excel for your accountant.',
+                desc: 'Generate PDF payroll reports with per-employee breakdowns and overtime calculations. Export to Excel for your accountant or payroll provider.',
                 color: 'bg-cyan-50 text-cyan-600',
+              },
+              {
+                icon: FileOutput,
+                title: 'Accounting Export',
+                desc: 'One-click export to QuickBooks, Xero, or ADP. Track sync status, view export history, and generate CSV files formatted for your accounting software.',
+                color: 'bg-orange-50 text-orange-600',
+              },
+              {
+                icon: Sparkles,
+                title: 'AI Insights',
+                desc: 'Anomaly detection flags buddy punching, ghost shifts, and overtime gaming. Predictive alerts warn about overtime projections and budget overruns before they happen.',
+                color: 'bg-fuchsia-50 text-fuchsia-600',
+              },
+              {
+                icon: Upload,
+                title: 'Import',
+                desc: 'Drag-and-drop import for Excel spreadsheets, CSV files, scanned PDFs, and even photos of paper timesheets. OCR automatically extracts hours and employee data.',
+                color: 'bg-red-50 text-red-600',
               },
             ].map((feature) => (
               <div key={feature.title} className="bg-white border border-gray-200 rounded-xl p-8 hover:shadow-lg transition-shadow">
@@ -200,7 +319,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Dark Feature Section */}
+      {/* Dark Feature Section — Automate Payroll */}
       <section className="bg-secondary-500 py-20">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-16 items-center">
@@ -246,14 +365,14 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Team Section */}
+      {/* Built for Field Service */}
       <section id="about" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-black text-secondary-500 uppercase mb-4">
             Built for Field Service Teams
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-12">
-            From drivers to office staff, ServiceCore handles time tracking for your entire crew.
+            From drivers to office staff, ServiceCore handles operations for your entire portable sanitation crew.
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -261,20 +380,20 @@ export function LandingPage() {
               {
                 icon: Users,
                 count: '18',
-                label: 'Employees Tracked',
-                desc: 'Drivers, service crew, and office staff all in one system',
+                label: 'Employees',
+                desc: 'Drivers, service techs, and office staff all managed in one system',
               },
               {
-                icon: BarChart3,
-                count: '7',
-                label: 'Active Projects',
-                desc: 'Construction sites, events, municipal contracts, and more',
+                icon: MapPin,
+                count: '50',
+                label: 'Service Locations',
+                desc: 'Construction sites, events, municipal contracts, and recurring routes',
               },
               {
-                icon: Clock,
-                count: '30 days',
-                label: 'Historical Data',
-                desc: 'Full month of time entries with attendance patterns',
+                icon: Container,
+                count: '20',
+                label: 'Equipment Units',
+                desc: 'Porta-johns, hand wash stations, and restroom trailers tracked and serviced',
               },
             ].map((item) => (
               <div key={item.label} className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
