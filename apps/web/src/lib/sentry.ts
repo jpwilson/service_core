@@ -6,9 +6,12 @@ export function initSentry() {
   if (!SENTRY_DSN) return;
   Sentry.init({
     dsn: SENTRY_DSN,
+    sendDefaultPii: true,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+    ],
     environment: import.meta.env.MODE,
-    tracesSampleRate: 0.1,
-    replaysSessionSampleRate: 0,
-    replaysOnErrorSampleRate: 1.0,
+    tracesSampleRate: 1.0,
+    tracePropagationTargets: ['localhost', /^https:\/\/servicecore.*\.vercel\.app/],
   });
 }
