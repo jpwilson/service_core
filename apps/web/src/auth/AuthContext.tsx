@@ -7,6 +7,7 @@ export interface DemoUser {
   role: 'admin' | 'driver' | 'manager';
   employeeId: string;
   avatar: string;
+  accessLevel: string;
   description: string;
 }
 
@@ -18,7 +19,8 @@ export const DEMO_USERS: DemoUser[] = [
     role: 'admin',
     employeeId: 'emp-014',
     avatar: '#f89020',
-    description: 'Administrator — Full access: dashboard, analytics, approvals, invoicing, settings, and all management tools',
+    accessLevel: 'Administrator — Full Access',
+    description: 'Dashboard, analytics, approvals, invoicing, settings, and all management tools',
   },
   {
     id: 'demo-driver',
@@ -27,7 +29,8 @@ export const DEMO_USERS: DemoUser[] = [
     role: 'driver',
     employeeId: 'emp-001',
     avatar: '#3b82f6',
-    description: 'Driver — Time clock, daily route planning, schedule view, and equipment status',
+    accessLevel: 'Driver — Limited Access',
+    description: 'Time clock, daily route planning, schedule view, and equipment status',
   },
   {
     id: 'demo-manager',
@@ -36,7 +39,8 @@ export const DEMO_USERS: DemoUser[] = [
     role: 'manager',
     employeeId: 'emp-014',
     avatar: '#dc2626',
-    description: 'Operations Manager — Full access: crew scheduling, approvals, customers, invoicing, analytics, and reporting',
+    accessLevel: 'Operations Manager — Full Access',
+    description: 'Crew scheduling, approvals, customers, invoicing, analytics, and reporting',
   },
 ];
 

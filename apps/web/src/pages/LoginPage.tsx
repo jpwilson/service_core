@@ -103,6 +103,11 @@ export function LoginPage() {
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-gray-900">{user.name}</div>
                           <div className="text-xs text-gray-500">{user.email}</div>
+                          <div className="mt-1.5 mb-0.5">
+                            <span className="text-xs font-semibold text-pink-600 border-b-2 border-pink-300 pb-0.5">
+                              {user.accessLevel}
+                            </span>
+                          </div>
                           <div className="text-xs text-gray-400 mt-1">{user.description}</div>
                         </div>
                       </button>
@@ -119,7 +124,12 @@ export function LoginPage() {
                   <LogIn className="w-4 h-4" />
                   Ready to sign in as {selected.name}
                 </div>
-                <p className="text-xs text-primary-600">{selected.description}</p>
+                <div className="mb-1">
+                  <span className="text-xs font-semibold text-pink-600 border-b-2 border-pink-300 pb-0.5">
+                    {selected.accessLevel}
+                  </span>
+                </div>
+                <p className="text-xs text-primary-600 mt-2">{selected.description}</p>
               </div>
             )}
 
