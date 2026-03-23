@@ -21,6 +21,7 @@ import {
   Truck,
   ClipboardCheck,
   Moon,
+  LogIn,
 } from 'lucide-react';
 
 export function LandingPage() {
@@ -40,12 +41,7 @@ export function LandingPage() {
               <Phone className="w-3 h-3" /> SUPPORT <strong>1-800-GOT-JONS</strong>
             </span>
           </div>
-          <button
-            onClick={() => navigate('/login')}
-            className="border border-primary-500 text-primary-500 px-4 py-1 rounded text-xs font-bold uppercase hover:bg-primary-500 hover:text-white transition-colors"
-          >
-            Customer Login
-          </button>
+          <span className="text-xs text-white/50">Available 24/7</span>
         </div>
       </div>
 
@@ -143,6 +139,20 @@ export function LandingPage() {
               <div className="text-sm text-white/80 font-medium mt-1">{stat.label}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Customer Login CTA */}
+      <section className="py-8 bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <p className="text-sm text-gray-500">Already a ServiceCore customer?</p>
+          <button
+            onClick={() => navigate('/login')}
+            className="flex items-center gap-2 px-6 py-2.5 border-2 border-secondary-500 text-secondary-500 rounded-lg text-sm font-bold uppercase tracking-wide hover:bg-secondary-500 hover:text-white transition-colors"
+          >
+            <LogIn className="w-4 h-4" />
+            Customer Login
+          </button>
         </div>
       </section>
 
