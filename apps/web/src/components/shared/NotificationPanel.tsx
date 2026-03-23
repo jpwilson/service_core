@@ -14,6 +14,7 @@ import {
 import { mockNotifications } from '@servicecore/shared';
 import type { Notification, NotificationType } from '@servicecore/shared';
 import { useAppStore } from '../../store/useAppStore';
+import { useAuth } from '../../auth/AuthContext';
 
 const TYPE_CONFIG: Record<NotificationType, { icon: typeof Bell; color: string; bg: string }> = {
   timesheet_reminder: { icon: Clock, color: 'text-blue-600', bg: 'bg-blue-100' },
@@ -38,7 +39,12 @@ function timeAgo(dateStr: string): string {
 
 export function NotificationPanel() {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const { user } = useAuth();
+  const employeeId = user?.employeeId;
+  // Filter notifications to only show ones for the logged-in user
+  const [notifications, setNotifications] = useState<Notification[]>(() =>
+    mockNotifications.filter((n) => !employeeId || n.recipientId === employeeId)
+  );
   const panelRef = useRef<HTMLDivElement>(null);
   const { setDashboardTab } = useAppStore();
 
