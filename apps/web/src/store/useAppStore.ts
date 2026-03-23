@@ -63,6 +63,10 @@ interface AppState {
   setClockOutNotes: (notes: string) => void;
   setClockOutMileage: (miles: number) => void;
   addSessionEntries: (entries: TimeEntry[]) => void;
+  editSessionEntry: (id: string, updates: Partial<TimeEntry>) => void;
+  setClockInProject: (projectId: string | null) => void;
+  importedFiles: Record<string, string>; // hash → ISO date string
+  addImportedFile: (hash: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -116,6 +120,9 @@ export const useAppStore = create<AppState>()(
       // Notes/mileage
       clockOutNotes: '',
       clockOutMileage: 0,
+
+      // Imported file tracking
+      importedFiles: {},
 
       setCurrentView: (view) => set({ currentView: view }),
       setTimeClockMode: (mode) => set({ timeClockMode: mode }),
@@ -171,24 +178,36 @@ export const useAppStore = create<AppState>()(
         // If on break, end it first
         let finalBreakSeconds = state.totalBreakSeconds;
         if (state.isOnBreak && state.breakStart) {
-          finalBreakSeconds += Math.floor(
+          const rawBreakElapsed = Math.floor(
             (Date.now() - new Date(state.breakStart).getTime()) / 1000
           );
+          finalBreakSeconds += state.demoMode
+            ? rawBreakElapsed * state.demoSpeedMultiplier
+            : rawBreakElapsed;
         }
+
+        // In demo mode, calculate a fake clock-out time using the accelerated duration
+        const realElapsedMs = Date.now() - new Date(state.clockInTime).getTime();
+        const demoElapsedMs = state.demoMode
+          ? realElapsedMs * state.demoSpeedMultiplier
+          : realElapsedMs;
+        const effectiveClockOut = new Date(
+          new Date(state.clockInTime).getTime() + demoElapsedMs
+        ).toISOString();
 
         const entry: TimeEntry = {
           id: `te-session-${Date.now()}`,
           employeeId: state.currentEmployeeId,
           projectId: state.clockInProject || 'proj-001',
           clockIn: state.clockInTime,
-          clockOut: new Date().toISOString(),
+          clockOut: effectiveClockOut,
           breaks: finalBreakSeconds > 0
             ? [
                 {
                   id: `brk-${Date.now()}`,
                   type: state.breakType || 'lunch',
                   startTime: state.clockInTime, // simplified
-                  endTime: new Date().toISOString(),
+                  endTime: effectiveClockOut,
                 },
               ]
             : [],
@@ -230,9 +249,12 @@ export const useAppStore = create<AppState>()(
           set({ isOnBreak: false, breakStart: null });
           return;
         }
-        const elapsed = Math.floor(
+        const rawElapsed = Math.floor(
           (Date.now() - new Date(state.breakStart).getTime()) / 1000
         );
+        const elapsed = state.demoMode
+          ? rawElapsed * state.demoSpeedMultiplier
+          : rawElapsed;
         set({
           isOnBreak: false,
           breakStart: null,
@@ -245,6 +267,20 @@ export const useAppStore = create<AppState>()(
       addSessionEntries: (entries) =>
         set((state) => ({
           sessionEntries: [...state.sessionEntries, ...entries],
+        })),
+      editSessionEntry: (id, updates) =>
+        set((state) => ({
+          sessionEntries: state.sessionEntries.map((e) =>
+            e.id === id ? { ...e, ...updates } : e
+          ),
+        })),
+      setClockInProject: (projectId) => set({ clockInProject: projectId }),
+      addImportedFile: (hash) =>
+        set((state) => ({
+          importedFiles: {
+            ...state.importedFiles,
+            [hash]: new Date().toISOString(),
+          },
         })),
     }),
     {
@@ -259,6 +295,7 @@ export const useAppStore = create<AppState>()(
         sessionEntries: state.sessionEntries,
         timesheetApprovals: state.timesheetApprovals,
         demoMode: state.demoMode,
+        importedFiles: state.importedFiles,
       }),
       storage: {
         getItem: (name) => {

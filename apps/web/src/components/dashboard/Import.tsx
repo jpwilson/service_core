@@ -175,7 +175,7 @@ function getFileType(file: File): 'excel' | 'csv' | 'pdf' | 'image' {
 }
 
 export function Import() {
-  const { addToast, addSessionEntries } = useAppStore();
+  const { addToast, addSessionEntries, importedFiles, addImportedFile } = useAppStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Shared state
@@ -197,6 +197,7 @@ export function Import() {
   const [rawText, setRawText] = useState('');
   const [ocrEntries, setOcrEntries] = useState<OcrParsedEntry[]>([]);
   const currentFileRef = useRef<File | null>(null);
+  const [currentFileHash, setCurrentFileHash] = useState('');
 
   const resetAll = useCallback(() => {
     setMode('idle');
@@ -209,13 +210,30 @@ export function Import() {
     setImageUrl(null);
     setRawText('');
     setOcrEntries([]);
+    setCurrentFileHash('');
     currentFileRef.current = null;
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
+  // ---- Hash helper for duplicate detection ----
+  const getFileHash = useCallback((file: File): string => {
+    return `${file.name}::${file.size}`;
+  }, []);
+
   // ---- Process file based on type ----
   const processFile = useCallback(async (file: File) => {
+    // Check for duplicate import
+    const hash = getFileHash(file);
+    if (importedFiles[hash]) {
+      const importDate = new Date(importedFiles[hash]).toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+      });
+      addToast(`This file was already imported on ${importDate}`, 'error');
+      return;
+    }
+
     setFileName(file.name);
+    setCurrentFileHash(hash);
     const type = getFileType(file);
 
     if (type === 'excel') {
@@ -302,7 +320,7 @@ export function Import() {
         resetAll();
       }
     }
-  }, [addToast, resetAll]);
+  }, [addToast, resetAll, getFileHash, importedFiles]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -422,6 +440,76 @@ export function Import() {
         </div>
       )}
 
+      {/* ---- TRY SAMPLE DATA ---- */}
+      {mode === 'idle' && (
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <h3 className="text-sm font-bold text-secondary-500 mb-3">Try with Sample Data</h3>
+          <p className="text-xs text-gray-500 mb-4">
+            No file handy? Generate sample data from the built-in dataset to see how import works.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                try {
+                  const data = exportTimesheetsToExcel(mockTimeEntries, mockEmployees, mockProjects);
+                  const blob = new Blob([data], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                  });
+                  const file = new File([blob], 'sample-timesheet.xlsx', {
+                    type: blob.type,
+                  });
+                  processFile(file);
+                } catch {
+                  addToast('Failed to generate sample Excel', 'error');
+                }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              Load Sample Excel
+            </button>
+            <button
+              onClick={() => {
+                try {
+                  const sampleOcrText = `WEEKLY TIMESHEET
+Employee: Marcus Trujillo    ID: EMP-003
+Department: Drivers
+Week of: March 17, 2026
+
+Date        In      Out     Hours   Notes
+03/17/2026  06:00   14:30   8.5     North route - all stops complete
+03/18/2026  06:15   15:00   8.75    South route - 2 extra pickups
+03/19/2026  05:45   14:15   8.5     East route
+03/20/2026  06:00   14:00   8.0     Metro route - traffic delay
+03/21/2026  06:30   15:30   9.0     West route - new customer setup
+
+Total Hours: 42.75
+Supervisor Signature: _______________`;
+                  const entries = parseOcrText(sampleOcrText);
+                  setRawText(sampleOcrText);
+                  setOcrEntries(entries.length > 0 ? entries : [
+                    { employeeName: 'Marcus Trujillo', date: '2026-03-17', clockIn: '06:00', clockOut: '14:30', hoursWorked: 8.5, project: null, notes: 'North route - all stops complete', confidence: 0.85 },
+                    { employeeName: 'Marcus Trujillo', date: '2026-03-18', clockIn: '06:15', clockOut: '15:00', hoursWorked: 8.75, project: null, notes: 'South route - 2 extra pickups', confidence: 0.82 },
+                    { employeeName: 'Marcus Trujillo', date: '2026-03-19', clockIn: '05:45', clockOut: '14:15', hoursWorked: 8.5, project: null, notes: 'East route', confidence: 0.9 },
+                    { employeeName: 'Marcus Trujillo', date: '2026-03-20', clockIn: '06:00', clockOut: '14:00', hoursWorked: 8.0, project: null, notes: 'Metro route - traffic delay', confidence: 0.78 },
+                    { employeeName: 'Marcus Trujillo', date: '2026-03-21', clockIn: '06:30', clockOut: '15:30', hoursWorked: 9.0, project: null, notes: 'West route - new customer setup', confidence: 0.88 },
+                  ]);
+                  setFileName('sample-ocr-timesheet.png');
+                  setCurrentFileHash('sample-ocr::0');
+                  setMode('ocr-results');
+                } catch {
+                  addToast('Failed to generate sample OCR data', 'error');
+                }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-orange-700 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
+            >
+              <Camera className="w-4 h-4" />
+              Load Sample OCR
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ---- EXCEL PREVIEW ---- */}
       {mode === 'excel-preview' && excelRows && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -491,6 +579,7 @@ export function Import() {
                   isManualEdit: false,
                 }));
                 addSessionEntries(newEntries);
+                if (currentFileHash) addImportedFile(currentFileHash);
                 addToast(`${excelRows.length} entries imported from Excel`, 'success'); resetAll();
               }}
               className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-white bg-primary-500 rounded-lg hover:bg-primary-600">
@@ -584,6 +673,7 @@ export function Import() {
                   isManualEdit: false,
                 }));
                 addSessionEntries(newEntries);
+                if (currentFileHash) addImportedFile(currentFileHash);
                 addToast(`${csvRows.length} entries imported from CSV`, 'success'); resetAll();
               }}
               className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-white bg-primary-500 rounded-lg hover:bg-primary-600">
@@ -714,6 +804,7 @@ export function Import() {
                     isManualEdit: false,
                   }));
                   addSessionEntries(newEntries);
+                  if (currentFileHash) addImportedFile(currentFileHash);
                   addToast(`${ocrEntries.length} entries imported from scan`, 'success'); resetAll();
                 }}
                 disabled={ocrEntries.length === 0}

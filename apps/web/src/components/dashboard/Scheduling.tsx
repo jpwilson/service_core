@@ -18,40 +18,40 @@ const ALL_EMPLOYEES = mockEmployees
 
 const EMPLOYEE_NAMES = ALL_EMPLOYEES.map((e) => `${e.firstName} ${e.lastName}`);
 
-const JOB_SITES = ['Denver Metro', 'Boulder CU', 'Fort Collins', 'CO Springs', 'Arvada'] as const;
-type JobSite = (typeof JOB_SITES)[number];
+const SERVICE_ROUTES = ['North Route', 'South Route', 'East Route', 'West Route', 'Metro Route'] as const;
+type ServiceRoute = (typeof SERVICE_ROUTES)[number];
 
-const SITE_ABBREV: Record<JobSite, string> = {
-  'Denver Metro': 'DEN',
-  'Boulder CU': 'BLD',
-  'Fort Collins': 'FTC',
-  'CO Springs': 'COS',
-  'Arvada': 'ARV',
+const ROUTE_ABBREV: Record<ServiceRoute, string> = {
+  'North Route': 'NTH',
+  'South Route': 'STH',
+  'East Route': 'EST',
+  'West Route': 'WST',
+  'Metro Route': 'MET',
 };
 
-const SITE_COLORS: Record<JobSite, { bg: string; dot: string; text: string }> = {
-  'Denver Metro': { bg: 'bg-blue-100', dot: 'bg-blue-500', text: 'text-blue-800' },
-  'Boulder CU': { bg: 'bg-emerald-100', dot: 'bg-emerald-500', text: 'text-emerald-800' },
-  'Fort Collins': { bg: 'bg-purple-100', dot: 'bg-purple-500', text: 'text-purple-800' },
-  'CO Springs': { bg: 'bg-amber-100', dot: 'bg-amber-500', text: 'text-amber-800' },
-  'Arvada': { bg: 'bg-rose-100', dot: 'bg-rose-500', text: 'text-rose-800' },
+const ROUTE_COLORS: Record<ServiceRoute, { bg: string; dot: string; text: string }> = {
+  'North Route': { bg: 'bg-blue-100', dot: 'bg-blue-500', text: 'text-blue-800' },
+  'South Route': { bg: 'bg-emerald-100', dot: 'bg-emerald-500', text: 'text-emerald-800' },
+  'East Route': { bg: 'bg-purple-100', dot: 'bg-purple-500', text: 'text-purple-800' },
+  'West Route': { bg: 'bg-amber-100', dot: 'bg-amber-500', text: 'text-amber-800' },
+  'Metro Route': { bg: 'bg-rose-100', dot: 'bg-rose-500', text: 'text-rose-800' },
 };
 
-// Cycle order: site1 -> site2 -> ... -> Off -> site1 ...
-const CYCLE_OPTIONS: (JobSite | null)[] = [...JOB_SITES, null];
+// Cycle order: route1 -> route2 -> ... -> Off -> route1 ...
+const CYCLE_OPTIONS: (ServiceRoute | null)[] = [...SERVICE_ROUTES, null];
 
-type ScheduleGrid = Record<string, Record<number, JobSite | null>>;
+type ScheduleGrid = Record<string, Record<number, ServiceRoute | null>>;
 
 function buildInitialSchedule(): ScheduleGrid {
-  // Deterministic seed assignments — rotate through sites for each employee
-  const seedPatterns: (JobSite | null)[][] = [
-    ['Denver Metro', 'Denver Metro', 'Boulder CU', 'Denver Metro', 'Denver Metro', null, null],
-    ['Boulder CU', 'Boulder CU', 'Boulder CU', 'Fort Collins', 'Boulder CU', null, null],
-    ['Fort Collins', 'Fort Collins', 'Denver Metro', 'Fort Collins', 'Fort Collins', 'Denver Metro', null],
-    ['CO Springs', 'CO Springs', 'CO Springs', 'CO Springs', 'Arvada', null, null],
-    ['Arvada', 'Denver Metro', 'Arvada', 'Arvada', 'Arvada', null, null],
-    ['Denver Metro', 'Fort Collins', 'Fort Collins', 'Denver Metro', null, 'CO Springs', null],
-    ['CO Springs', 'Arvada', 'CO Springs', null, 'CO Springs', null, null],
+  // Deterministic seed assignments — rotate through routes for each employee
+  const seedPatterns: (ServiceRoute | null)[][] = [
+    ['Metro Route', 'Metro Route', 'North Route', 'Metro Route', 'Metro Route', null, null],
+    ['North Route', 'North Route', 'North Route', 'East Route', 'North Route', null, null],
+    ['East Route', 'East Route', 'Metro Route', 'East Route', 'East Route', 'Metro Route', null],
+    ['South Route', 'South Route', 'South Route', 'South Route', 'West Route', null, null],
+    ['West Route', 'Metro Route', 'West Route', 'West Route', 'West Route', null, null],
+    ['Metro Route', 'East Route', 'East Route', 'Metro Route', null, 'South Route', null],
+    ['South Route', 'West Route', 'South Route', null, 'South Route', null, null],
   ];
 
   const grid: ScheduleGrid = {};
@@ -154,8 +154,8 @@ export function Scheduling() {
           </h2>
           <p className="text-sm text-gray-500">
             {isDriver
-              ? 'Your weekly assignments'
-              : 'Weekly scheduling \u2014 click any cell to cycle assignments'}
+              ? 'Your assigned route for each day this week'
+              : 'Weekly scheduling \u2014 click any cell to cycle route assignments'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -191,7 +191,7 @@ export function Scheduling() {
               <Calendar className="w-5 h-5 text-primary-500" />
             </div>
             <div>
-              <p className="text-xs text-gray-500 font-medium">Today&apos;s Assignment</p>
+              <p className="text-xs text-gray-500 font-medium">Today&apos;s Route</p>
               <p className="text-lg font-bold text-secondary-500">
                 {todaySite ? todaySite : 'Off'}
               </p>
@@ -218,7 +218,7 @@ export function Scheduling() {
             </div>
             <div>
               <p className="text-2xl font-bold text-secondary-500">{activeSites}</p>
-              <p className="text-xs text-gray-500">Job Sites Active</p>
+              <p className="text-xs text-gray-500">Routes Active</p>
             </div>
           </div>
           <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 flex items-center gap-3">
@@ -321,7 +321,7 @@ export function Scheduling() {
                         </td>
                       );
                     }
-                    const colors = SITE_COLORS[site];
+                    const colors = ROUTE_COLORS[site];
                     return (
                       <td key={dayIdx} className="py-2.5 px-1.5 text-center">
                         {isDriver ? (
@@ -330,7 +330,7 @@ export function Scheduling() {
                             title={site}
                           >
                             <span className={`w-2 h-2 rounded-full ${colors.dot} flex-shrink-0`} />
-                            {SITE_ABBREV[site]}
+                            {ROUTE_ABBREV[site]}
                           </div>
                         ) : (
                           <button
@@ -339,7 +339,7 @@ export function Scheduling() {
                             title={`${site} \u2014 click to change`}
                           >
                             <span className={`w-2 h-2 rounded-full ${colors.dot} flex-shrink-0`} />
-                            {SITE_ABBREV[site]}
+                            {ROUTE_ABBREV[site]}
                           </button>
                         )}
                       </td>
@@ -356,11 +356,11 @@ export function Scheduling() {
       <div className="bg-white rounded-xl border border-gray-200 px-5 py-3">
         <div className="flex items-center gap-2 mb-2">
           <Calendar className="w-4 h-4 text-secondary-500" />
-          <span className="text-xs font-bold text-secondary-500 uppercase">Job Site Legend</span>
+          <span className="text-xs font-bold text-secondary-500 uppercase">Route Legend</span>
         </div>
         <div className="flex flex-wrap gap-3">
-          {JOB_SITES.map((site) => {
-            const colors = SITE_COLORS[site];
+          {SERVICE_ROUTES.map((site) => {
+            const colors = ROUTE_COLORS[site];
             return (
               <div
                 key={site}
@@ -368,7 +368,7 @@ export function Scheduling() {
               >
                 <span className={`w-2.5 h-2.5 rounded-full ${colors.dot}`} />
                 <span className={`text-xs font-semibold ${colors.text}`}>
-                  {SITE_ABBREV[site]}
+                  {ROUTE_ABBREV[site as ServiceRoute]}
                 </span>
                 <span className={`text-xs ${colors.text} opacity-70`}>{site}</span>
               </div>

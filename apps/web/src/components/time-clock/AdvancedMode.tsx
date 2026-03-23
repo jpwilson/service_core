@@ -9,6 +9,9 @@ import {
   Clock,
   BarChart3,
   AlertTriangle,
+  Pencil,
+  Check,
+  X,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import type { Employee, TimeEntry, BreakType } from '@servicecore/shared';
@@ -39,6 +42,8 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
     setClockOutNotes,
     setClockOutMileage,
     sessionEntries,
+    editSessionEntry,
+    setClockInProject,
   } = useAppStore();
 
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -47,6 +52,8 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
   const [mileage, setMileage] = useState('');
   const [notes, setNotes] = useState('');
   const [noProjectWarning, setNoProjectWarning] = useState(false);
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const [editHoursValue, setEditHoursValue] = useState('');
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -62,11 +69,12 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
     setClockOutMileage(parseFloat(mileage) || 0);
   }, [mileage, setClockOutMileage]);
 
-  // Current break elapsed
+  // Current break elapsed (apply demo multiplier for display)
   const currentBreakElapsed = useMemo(() => {
     if (!isOnBreak || !breakStart) return 0;
-    return Math.floor((Date.now() - new Date(breakStart).getTime()) / 1000);
-  }, [isOnBreak, breakStart, currentTime]);
+    const rawElapsed = Math.floor((Date.now() - new Date(breakStart).getTime()) / 1000);
+    return demoMode ? rawElapsed * demoSpeedMultiplier : rawElapsed;
+  }, [isOnBreak, breakStart, currentTime, demoMode, demoSpeedMultiplier]);
 
   // Break exceeds 30 minutes warning
   const breakWarningMinutes = useMemo(() => {
@@ -270,7 +278,13 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
         </div>
         <select
           value={selectedProject}
-          onChange={(e) => setSelectedProject(e.target.value)}
+          onChange={(e) => {
+            setSelectedProject(e.target.value);
+            if (isClockedIn) {
+              setClockInProject(e.target.value || null);
+              addToast('Project updated for current shift', 'info');
+            }
+          }}
           className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-secondary-500 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <option value="">Select a project...</option>
@@ -390,7 +404,64 @@ export default function AdvancedMode({ employee, entries }: AdvancedModeProps) {
                   <p className="text-xs font-medium text-secondary-500 truncate">{entry.projectName}</p>
                   <p className="text-[10px] text-gray-400">{entry.date}</p>
                 </div>
-                <span className="text-xs font-semibold text-primary-500 tabular-nums ml-2">{formatHoursMinutes(entry.hours)}</span>
+                {editingEntryId === entry.id ? (
+                  <div className="flex items-center gap-1 ml-2">
+                    <input
+                      type="number"
+                      step="0.25"
+                      value={editHoursValue}
+                      onChange={(e) => setEditHoursValue(e.target.value)}
+                      className="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-xs text-secondary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => {
+                        const newHours = parseFloat(editHoursValue);
+                        if (isNaN(newHours) || newHours < 0) {
+                          addToast('Invalid hours value', 'error');
+                          setEditingEntryId(null);
+                          return;
+                        }
+                        if (entry.id.startsWith('te-session-') || entry.id.startsWith('te-import-')) {
+                          // Find the original session entry to compute new clockOut
+                          const original = sessionEntries.find((e) => e.id === entry.id);
+                          if (original) {
+                            const clockInMs = new Date(original.clockIn).getTime();
+                            const newClockOut = new Date(clockInMs + newHours * 3600000).toISOString();
+                            editSessionEntry(entry.id, { clockOut: newClockOut });
+                            addToast(`Updated to ${formatHoursMinutes(newHours)}`, 'success');
+                          }
+                        } else {
+                          addToast('Editing mock data not supported in demo', 'info');
+                        }
+                        setEditingEntryId(null);
+                      }}
+                      className="p-0.5 text-green-600 hover:text-green-700"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setEditingEntryId(null)}
+                      className="p-0.5 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 ml-2">
+                    <span className="text-xs font-semibold text-primary-500 tabular-nums">{formatHoursMinutes(entry.hours)}</span>
+                    <button
+                      onClick={() => {
+                        setEditingEntryId(entry.id);
+                        setEditHoursValue(entry.hours.toFixed(2));
+                      }}
+                      className="p-0.5 text-gray-300 hover:text-primary-500 transition-colors"
+                      title="Edit hours"
+                    >
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
