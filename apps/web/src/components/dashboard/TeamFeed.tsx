@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Activity, MapPin, Inbox } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import type { Employee, ActivityEvent } from '@servicecore/shared';
@@ -24,6 +24,35 @@ function getInitials(firstName: string, lastName: string): string {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
 
+const LIVE_EVENT_LOCATIONS = [
+  'Denver Metro',
+  'Boulder CU',
+  'Fort Collins',
+  'CO Springs',
+  'Arvada',
+  'I-25 Corridor',
+  'RiNo Development',
+  'Red Rocks Area',
+  'Cherry Creek',
+  'DIA Terminal',
+];
+
+const LIVE_EVENT_TYPES: ActivityEvent['type'][] = ['clock_in', 'clock_out', 'note', 'break_start'];
+
+function generateRandomEvent(employees: Employee[]): ActivityEvent {
+  const emp = employees[Math.floor(Math.random() * employees.length)];
+  const location = LIVE_EVENT_LOCATIONS[Math.floor(Math.random() * LIVE_EVENT_LOCATIONS.length)];
+  const eventType = LIVE_EVENT_TYPES[Math.floor(Math.random() * LIVE_EVENT_TYPES.length)];
+
+  return {
+    id: `live-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    employeeId: emp.id,
+    type: eventType,
+    timestamp: new Date().toISOString(),
+    location,
+  };
+}
+
 export function TeamFeed() {
   const employeeMap = useMemo(() => {
     const map = new Map<string, Employee>();
@@ -32,6 +61,23 @@ export function TeamFeed() {
     }
     return map;
   }, []);
+
+  const activeEmployees = useMemo(
+    () => mockEmployees.filter((e) => e.isActive),
+    []
+  );
+
+  const [liveEvents, setLiveEvents] = useState<ActivityEvent[]>([]);
+
+  const addLiveEvent = useCallback(() => {
+    const newEvent = generateRandomEvent(activeEmployees);
+    setLiveEvents((prev) => [newEvent, ...prev].slice(0, 10)); // keep max 10 live events
+  }, [activeEmployees]);
+
+  useEffect(() => {
+    const interval = setInterval(addLiveEvent, 30000);
+    return () => clearInterval(interval);
+  }, [addLiveEvent]);
 
   const recentEvents = useMemo(() => {
     return [...mockActivityEvents]
@@ -42,6 +88,11 @@ export function TeamFeed() {
       .slice(0, 30);
   }, []);
 
+  // Merge live events at the top
+  const allEvents = useMemo(() => {
+    return [...liveEvents, ...recentEvents];
+  }, [liveEvents, recentEvents]);
+
   return (
     <div className="bg-white rounded-xl border border-gray-200">
       {/* Header */}
@@ -50,20 +101,27 @@ export function TeamFeed() {
         <h3 className="text-base font-semibold text-[#0a1f44]">
           Team Activity
         </h3>
+        {liveEvents.length > 0 && (
+          <span className="ml-auto flex items-center gap-1.5 text-xs text-green-600 font-medium">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            Live
+          </span>
+        )}
       </div>
 
       {/* Feed list */}
-      {recentEvents.length === 0 ? (
+      {allEvents.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-gray-400">
           <Inbox className="w-10 h-10 mb-2" />
           <p className="text-sm">No recent activity</p>
         </div>
       ) : (
         <div className="max-h-96 overflow-y-auto divide-y divide-gray-50">
-          {recentEvents.map((event) => {
+          {allEvents.map((event) => {
             const employee = employeeMap.get(event.employeeId);
             if (!employee) return null;
 
+            const isLive = event.id.startsWith('live-');
             const relativeTime = formatDistanceToNow(
               new Date(event.timestamp),
               { addSuffix: true },
@@ -72,7 +130,9 @@ export function TeamFeed() {
             return (
               <div
                 key={event.id}
-                className={`flex items-center gap-3 px-5 py-3 border-l-4 ${borderColorMap[event.type]} hover:bg-gray-50 transition-colors`}
+                className={`flex items-center gap-3 px-5 py-3 border-l-4 ${borderColorMap[event.type]} hover:bg-gray-50 transition-colors ${
+                  isLive ? 'bg-green-50/30' : ''
+                }`}
               >
                 {/* Avatar */}
                 <div

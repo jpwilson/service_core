@@ -15,7 +15,9 @@ import {
   Search,
   Filter,
   AlertTriangle,
+  CheckCircle,
 } from 'lucide-react';
+import { useAuth } from '../../auth/AuthContext';
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -299,9 +301,27 @@ function FitBounds({ stops, poolLocations, showPool }: { stops: RouteStop[]; poo
 
 // ─── Main Component ───────────────────────────────────────────────
 
+// Denver-area cluster for driver pre-assigned route (geographically close stops)
+const DRIVER_ROUTE_IDS = ['loc-03', 'loc-14', 'loc-15', 'loc-21', 'loc-23', 'loc-39', 'loc-38'];
+
+function getDriverPreloadedStops(): RouteStop[] {
+  const depot: RouteStop = { ...DEPOT };
+  const stops = DRIVER_ROUTE_IDS
+    .map((id) => SERVICE_LOCATIONS.find((loc) => loc.id === id))
+    .filter((loc): loc is ServiceLocation => loc != null)
+    .map((loc) => ({ ...loc } as RouteStop));
+  return [depot, ...stops];
+}
+
 export function RoutePlanning() {
-  // Route state — starts with just the depot
-  const [routeStops, setRouteStops] = useState<RouteStop[]>([{ ...DEPOT }]);
+  const { user } = useAuth();
+  const isDriver = user?.role === 'driver';
+
+  // Route state — starts with just the depot (or pre-loaded for drivers)
+  const [routeStops, setRouteStops] = useState<RouteStop[]>(() =>
+    isDriver ? getDriverPreloadedStops() : [{ ...DEPOT }]
+  );
+  const [completedStops, setCompletedStops] = useState<Set<string>>(new Set());
   const [optimized, setOptimized] = useState(false);
   const [routeGeometry, setRouteGeometry] = useState<[number, number][] | null>(null);
   const [legTraffic, setLegTraffic] = useState<('low' | 'moderate' | 'heavy')[]>([]);
@@ -487,17 +507,21 @@ export function RoutePlanning() {
         <div>
           <h2 className="text-lg font-bold text-secondary-500">Route Planning</h2>
           <p className="text-sm text-gray-500">
-            Build today&apos;s route from your {SERVICE_LOCATIONS.length} service locations (max {MAX_ROUTE_STOPS} stops)
+            {isDriver
+              ? 'Your assigned route for today'
+              : `Build today\u0027s route from your ${SERVICE_LOCATIONS.length} service locations (max ${MAX_ROUTE_STOPS} stops)`}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleClearRoute}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Clear Route
-          </button>
+          {!isDriver && (
+            <button
+              onClick={handleClearRoute}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Clear Route
+            </button>
+          )}
           <button
             onClick={handleOptimize}
             disabled={routeStops.length < 3}
@@ -674,7 +698,7 @@ export function RoutePlanning() {
         {/* Right Panel: Route Stops + Service Pool */}
         <div className="space-y-4 flex flex-col" style={{ maxHeight: 550, minHeight: 550 }}>
           {/* Today's Route */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col" style={{ flex: '1 1 50%', minHeight: 0 }}>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col" style={{ flex: isDriver ? '1 1 100%' : '1 1 50%', minHeight: 0 }}>
             <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-2 flex-shrink-0">
               <Navigation className="w-4 h-4 text-primary-500" />
               <h3 className="text-sm font-bold text-secondary-500 uppercase">Today&apos;s Route</h3>
@@ -708,7 +732,14 @@ export function RoutePlanning() {
                     {idx === 0 ? <MapPin className="w-3 h-3" /> : idx}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-secondary-500 truncate">{stop.name}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="text-xs font-semibold text-secondary-500 truncate">{stop.name}</p>
+                      {completedStops.has(stop.id) && (
+                        <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                          <CheckCircle className="w-2.5 h-2.5" /> Done
+                        </span>
+                      )}
+                    </div>
                     {idx > 0 && stop.legDistance != null && stop.legDistance > 0 && (
                       <p className="text-[10px] text-gray-400">
                         {(stop.legDistance / 1609.34).toFixed(1)} mi &middot; {Math.round((stop.legDuration || 0) / 60)} min
@@ -720,7 +751,25 @@ export function RoutePlanning() {
                       </p>
                     )}
                   </div>
-                  {idx !== 0 && (
+                  {idx !== 0 && isDriver && (
+                    <button
+                      onClick={() => setCompletedStops((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(stop.id)) next.delete(stop.id);
+                        else next.add(stop.id);
+                        return next;
+                      })}
+                      className={`p-1 transition-colors flex-shrink-0 ${
+                        completedStops.has(stop.id)
+                          ? 'text-green-500'
+                          : 'text-gray-300 hover:text-green-500'
+                      }`}
+                      title={completedStops.has(stop.id) ? 'Completed' : 'Mark Complete'}
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                    </button>
+                  )}
+                  {idx !== 0 && !isDriver && (
                     <button
                       onClick={() => removeFromRoute(stop.id)}
                       className="p-1 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
@@ -739,8 +788,8 @@ export function RoutePlanning() {
             </div>
           </div>
 
-          {/* Service Location Pool */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col" style={{ flex: '1 1 50%', minHeight: 0 }}>
+          {/* Service Location Pool (admin/manager only) */}
+          {!isDriver && <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col" style={{ flex: '1 1 50%', minHeight: 0 }}>
             <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex-shrink-0">
               <div className="flex items-center gap-2 mb-2">
                 <MapPin className="w-4 h-4 text-gray-500" />
@@ -836,7 +885,7 @@ export function RoutePlanning() {
                 </div>
               )}
             </div>
-          </div>
+          </div>}
         </div>
       </div>
 

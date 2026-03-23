@@ -9,9 +9,10 @@ import {
   MapPin,
   Calendar,
 } from 'lucide-react';
+import { useAuth } from '../../auth/AuthContext';
 
 type EquipmentStatus = 'deployed' | 'available' | 'maintenance' | 'retired';
-type EquipmentType = 'Standard Unit' | 'Deluxe Unit' | 'Hand Wash Station' | 'ADA Unit' | 'Trailer (8-unit)' | 'Holding Tank';
+type EquipmentType = 'Standard Unit' | 'Deluxe Unit' | 'Hand Wash Station' | 'ADA Unit' | 'Restroom Trailer' | 'Holding Tank';
 
 interface EquipmentItem {
   id: string;
@@ -22,30 +23,116 @@ interface EquipmentItem {
   lastServiceDate: string;
   nextServiceDue: string;
   condition: number;
+  assignedTo: string | null; // employee ID of assigned driver
 }
 
-const mockEquipment: EquipmentItem[] = [
-  { id: 'eq-01', type: 'Standard Unit', serialNumber: 'SC-STD-001', status: 'deployed', currentSite: 'I-25 Corridor Project', lastServiceDate: '2026-03-18', nextServiceDue: '2026-03-25', condition: 8 },
-  { id: 'eq-02', type: 'Standard Unit', serialNumber: 'SC-STD-002', status: 'deployed', currentSite: 'Union Station Expansion', lastServiceDate: '2026-03-17', nextServiceDue: '2026-03-24', condition: 7 },
-  { id: 'eq-03', type: 'Standard Unit', serialNumber: 'SC-STD-003', status: 'available', currentSite: 'Yard', lastServiceDate: '2026-03-15', nextServiceDue: '2026-04-15', condition: 9 },
-  { id: 'eq-04', type: 'Standard Unit', serialNumber: 'SC-STD-004', status: 'maintenance', currentSite: 'Yard', lastServiceDate: '2026-03-10', nextServiceDue: '2026-03-20', condition: 3 },
-  { id: 'eq-05', type: 'Standard Unit', serialNumber: 'SC-STD-005', status: 'deployed', currentSite: 'Ralston Creek Subdivision', lastServiceDate: '2026-03-16', nextServiceDue: '2026-03-23', condition: 6 },
-  { id: 'eq-06', type: 'Deluxe Unit', serialNumber: 'SC-DLX-001', status: 'deployed', currentSite: 'Boulder Creek Festival Grounds', lastServiceDate: '2026-03-15', nextServiceDue: '2026-03-22', condition: 8 },
-  { id: 'eq-07', type: 'Deluxe Unit', serialNumber: 'SC-DLX-002', status: 'available', currentSite: 'Yard', lastServiceDate: '2026-03-12', nextServiceDue: '2026-04-12', condition: 9 },
-  { id: 'eq-08', type: 'Deluxe Unit', serialNumber: 'SC-DLX-003', status: 'deployed', currentSite: 'Chautauqua Park Amphitheater', lastServiceDate: '2026-03-18', nextServiceDue: '2026-03-25', condition: 7 },
-  { id: 'eq-09', type: 'Hand Wash Station', serialNumber: 'SC-HWS-001', status: 'deployed', currentSite: 'City Park Restrooms', lastServiceDate: '2026-03-19', nextServiceDue: '2026-03-26', condition: 8 },
-  { id: 'eq-10', type: 'Hand Wash Station', serialNumber: 'SC-HWS-002', status: 'available', currentSite: 'Yard', lastServiceDate: '2026-03-14', nextServiceDue: '2026-04-14', condition: 10 },
-  { id: 'eq-11', type: 'Hand Wash Station', serialNumber: 'SC-HWS-003', status: 'maintenance', currentSite: 'Yard', lastServiceDate: '2026-03-08', nextServiceDue: '2026-03-20', condition: 2 },
-  { id: 'eq-12', type: 'ADA Unit', serialNumber: 'SC-ADA-001', status: 'deployed', currentSite: 'Memorial Park Festival Area', lastServiceDate: '2026-03-17', nextServiceDue: '2026-03-24', condition: 7 },
-  { id: 'eq-13', type: 'ADA Unit', serialNumber: 'SC-ADA-002', status: 'deployed', currentSite: 'Roosevelt Park', lastServiceDate: '2026-03-19', nextServiceDue: '2026-03-26', condition: 9 },
-  { id: 'eq-14', type: 'ADA Unit', serialNumber: 'SC-ADA-003', status: 'retired', currentSite: 'Yard', lastServiceDate: '2026-01-15', nextServiceDue: '-', condition: 1 },
-  { id: 'eq-15', type: 'Trailer (8-unit)', serialNumber: 'SC-TRL-001', status: 'deployed', currentSite: 'Garden of the Gods Visitor Area', lastServiceDate: '2026-03-16', nextServiceDue: '2026-03-23', condition: 6 },
-  { id: 'eq-16', type: 'Trailer (8-unit)', serialNumber: 'SC-TRL-002', status: 'available', currentSite: 'Yard', lastServiceDate: '2026-03-10', nextServiceDue: '2026-04-10', condition: 8 },
-  { id: 'eq-17', type: 'Holding Tank', serialNumber: 'SC-HLD-001', status: 'deployed', currentSite: 'Water Treatment Facility', lastServiceDate: '2026-03-18', nextServiceDue: '2026-03-25', condition: 5 },
-  { id: 'eq-18', type: 'Holding Tank', serialNumber: 'SC-HLD-002', status: 'deployed', currentSite: 'County Fairgrounds', lastServiceDate: '2026-03-14', nextServiceDue: '2026-03-21', condition: 7 },
-  { id: 'eq-19', type: 'Standard Unit', serialNumber: 'SC-STD-006', status: 'retired', currentSite: 'Yard', lastServiceDate: '2025-12-01', nextServiceDue: '-', condition: 1 },
-  { id: 'eq-20', type: 'Standard Unit', serialNumber: 'SC-STD-007', status: 'available', currentSite: 'Yard', lastServiceDate: '2026-03-13', nextServiceDue: '2026-04-13', condition: 8 },
+// Seeded random for deterministic generation
+function createSeededRandom(s: number) {
+  let seed = s;
+  return () => {
+    seed = (seed * 16807 + 0) % 2147483647;
+    return (seed - 1) / 2147483646;
+  };
+}
+
+const SITES = [
+  'I-25 Corridor Project',
+  'Union Station Expansion',
+  'Ralston Creek Subdivision',
+  'Boulder Creek Festival Grounds',
+  'Chautauqua Park Amphitheater',
+  'City Park Restrooms',
+  'Memorial Park Festival Area',
+  'Roosevelt Park',
+  'Garden of the Gods Visitor Area',
+  'Water Treatment Facility',
+  'County Fairgrounds',
+  'Denver Metro Construction Site',
+  'Fort Collins Municipal',
+  'Colorado Springs Festival',
+  'RiNo Development Phase 3',
+  'DIA Terminal Expansion',
+  'Arvada Olde Town',
+  'Cherry Creek Arts Festival',
+  'Red Rocks Concert Area',
+  'Coors Field Service Area',
 ];
+
+const DRIVER_IDS = ['emp-001', 'emp-002', 'emp-003', 'emp-004', 'emp-005', 'emp-006'];
+
+function generateEquipment(): EquipmentItem[] {
+  const rand = createSeededRandom(12345);
+  const items: EquipmentItem[] = [];
+
+  const specs: { type: EquipmentType; prefix: string; count: number }[] = [
+    { type: 'Standard Unit', prefix: 'SC-STD', count: 40 },
+    { type: 'Deluxe Unit', prefix: 'SC-DLX', count: 15 },
+    { type: 'ADA Unit', prefix: 'SC-ADA', count: 10 },
+    { type: 'Hand Wash Station', prefix: 'SC-HWS', count: 8 },
+    { type: 'Restroom Trailer', prefix: 'SC-TRL', count: 4 },
+    { type: 'Holding Tank', prefix: 'SC-TNK', count: 3 },
+  ];
+
+  let idCounter = 1;
+
+  for (const spec of specs) {
+    for (let i = 1; i <= spec.count; i++) {
+      const r = rand();
+      let status: EquipmentStatus;
+      if (r < 0.60) status = 'deployed';
+      else if (r < 0.85) status = 'available';
+      else if (r < 0.95) status = 'maintenance';
+      else status = 'retired';
+
+      const condition = status === 'retired'
+        ? Math.max(1, Math.floor(rand() * 3))
+        : status === 'maintenance'
+          ? Math.max(2, Math.floor(rand() * 5) + 1)
+          : Math.floor(rand() * 5) + 6; // 6-10 for deployed/available
+
+      const site = status === 'deployed'
+        ? SITES[Math.floor(rand() * SITES.length)]
+        : 'Yard';
+
+      // Generate service dates
+      const dayOffset = Math.floor(rand() * 10);
+      const lastServiceDate = `2026-03-${String(Math.max(1, 22 - dayOffset)).padStart(2, '0')}`;
+
+      let nextServiceDue: string;
+      if (status === 'retired') {
+        nextServiceDue = '-';
+      } else {
+        const nextDay = 22 + Math.floor(rand() * 21); // up to 3 weeks out
+        const nextMonth = nextDay > 31 ? '04' : '03';
+        const nextDayStr = nextDay > 31 ? String(nextDay - 31).padStart(2, '0') : String(nextDay).padStart(2, '0');
+        nextServiceDue = `2026-${nextMonth}-${nextDayStr}`;
+      }
+
+      // Assign deployed units to drivers roughly evenly
+      let assignedTo: string | null = null;
+      if (status === 'deployed') {
+        assignedTo = DRIVER_IDS[Math.floor(rand() * DRIVER_IDS.length)];
+      }
+
+      items.push({
+        id: `eq-${String(idCounter).padStart(2, '0')}`,
+        type: spec.type,
+        serialNumber: `${spec.prefix}-${String(i).padStart(3, '0')}`,
+        status,
+        currentSite: site,
+        lastServiceDate,
+        nextServiceDue,
+        condition,
+        assignedTo,
+      });
+      idCounter++;
+    }
+  }
+
+  return items;
+}
+
+const allEquipment = generateEquipment();
 
 const statusConfig: Record<EquipmentStatus, { label: string; bg: string; text: string }> = {
   deployed: { label: 'Deployed', bg: 'bg-blue-100', text: 'text-blue-700' },
@@ -67,17 +154,28 @@ function formatDate(dateStr: string): string {
 }
 
 export function Equipment() {
+  const { user } = useAuth();
+  const isDriver = user?.role === 'driver';
+
   const [statusFilter, setStatusFilter] = useState<EquipmentStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<EquipmentType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // For drivers, only show equipment assigned to them
+  const baseEquipment = useMemo(() => {
+    if (isDriver && user?.employeeId) {
+      return allEquipment.filter((eq) => eq.assignedTo === user.employeeId);
+    }
+    return allEquipment;
+  }, [isDriver, user?.employeeId]);
+
   const types = useMemo(() => {
-    const set = new Set(mockEquipment.map((e) => e.type));
+    const set = new Set(baseEquipment.map((e) => e.type));
     return Array.from(set).sort();
-  }, []);
+  }, [baseEquipment]);
 
   const filtered = useMemo(() => {
-    return mockEquipment.filter((eq) => {
+    return baseEquipment.filter((eq) => {
       const matchesStatus = statusFilter === 'all' || eq.status === statusFilter;
       const matchesType = typeFilter === 'all' || eq.type === typeFilter;
       const matchesSearch =
@@ -87,24 +185,30 @@ export function Equipment() {
         eq.currentSite.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesStatus && matchesType && matchesSearch;
     });
-  }, [statusFilter, typeFilter, searchQuery]);
+  }, [statusFilter, typeFilter, searchQuery, baseEquipment]);
 
   const stats = useMemo(() => {
-    const total = mockEquipment.length;
-    const deployed = mockEquipment.filter((e) => e.status === 'deployed').length;
-    const available = mockEquipment.filter((e) => e.status === 'available').length;
-    const needsService = mockEquipment.filter(
-      (e) => e.status !== 'retired' && e.nextServiceDue !== '-' && e.nextServiceDue <= '2026-03-20'
+    const total = baseEquipment.length;
+    const deployed = baseEquipment.filter((e) => e.status === 'deployed').length;
+    const available = baseEquipment.filter((e) => e.status === 'available').length;
+    const needsService = baseEquipment.filter(
+      (e) => e.status !== 'retired' && e.nextServiceDue !== '-' && e.nextServiceDue <= '2026-03-22'
     ).length;
     return { total, deployed, available, needsService };
-  }, []);
+  }, [baseEquipment]);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-secondary-500">Equipment</h1>
-        <p className="text-sm text-gray-500 mt-1">Track units, trailers, and accessories across all job sites</p>
+        <h1 className="text-2xl font-bold text-secondary-500">
+          {isDriver ? 'My Equipment' : 'Equipment'}
+        </h1>
+        <p className="text-sm text-gray-500 mt-1">
+          {isDriver
+            ? 'Units assigned to your route'
+            : 'Track units, trailers, and accessories across all job sites'}
+        </p>
       </div>
 
       {/* Stats Cards */}
@@ -186,7 +290,7 @@ export function Equipment() {
             <tbody>
               {filtered.map((eq) => {
                 const sc = statusConfig[eq.status];
-                const isOverdue = eq.nextServiceDue !== '-' && eq.nextServiceDue <= '2026-03-20' && eq.status !== 'retired';
+                const isOverdue = eq.nextServiceDue !== '-' && eq.nextServiceDue <= '2026-03-22' && eq.status !== 'retired';
                 return (
                   <tr key={eq.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 font-mono font-medium text-secondary-500">{eq.serialNumber}</td>

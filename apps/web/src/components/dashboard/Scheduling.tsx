@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format, startOfWeek, addDays } from 'date-fns';
 import {
   ChevronLeft,
@@ -9,12 +9,14 @@ import {
   Calendar,
 } from 'lucide-react';
 import { mockEmployees } from '@servicecore/shared';
+import { useAuth } from '../../auth/AuthContext';
 
 // Use first 7 real employees (drivers + service crew)
-const EMPLOYEES = mockEmployees
+const ALL_EMPLOYEES = mockEmployees
   .filter((e) => e.department === 'Drivers' || e.department === 'Service Crew')
-  .slice(0, 7)
-  .map((e) => `${e.firstName} ${e.lastName}`);
+  .slice(0, 7);
+
+const EMPLOYEE_NAMES = ALL_EMPLOYEES.map((e) => `${e.firstName} ${e.lastName}`);
 
 const JOB_SITES = ['Denver Metro', 'Boulder CU', 'Fort Collins', 'CO Springs', 'Arvada'] as const;
 type JobSite = (typeof JOB_SITES)[number];
@@ -53,8 +55,8 @@ function buildInitialSchedule(): ScheduleGrid {
   ];
 
   const grid: ScheduleGrid = {};
-  for (let i = 0; i < EMPLOYEES.length; i++) {
-    const emp = EMPLOYEES[i];
+  for (let i = 0; i < EMPLOYEE_NAMES.length; i++) {
+    const emp = EMPLOYEE_NAMES[i];
     grid[emp] = {};
     const row = seedPatterns[i % seedPatterns.length];
     for (let d = 0; d < 7; d++) {
@@ -73,6 +75,9 @@ function getInitials(name: string): string {
 }
 
 export function Scheduling() {
+  const { user } = useAuth();
+  const isDriver = user?.role === 'driver';
+
   const [weekOffset, setWeekOffset] = useState(0);
   const [schedule, setSchedule] = useState<ScheduleGrid>(buildInitialSchedule);
 
@@ -80,7 +85,23 @@ export function Scheduling() {
   const weekStart = addDays(startOfWeek(today, { weekStartsOn: 1 }), weekOffset * 7);
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
+  // Find the current user's employee name for driver filtering
+  const currentEmployeeName = useMemo(() => {
+    if (!isDriver || !user?.employeeId) return null;
+    const emp = ALL_EMPLOYEES.find((e) => e.id === user.employeeId);
+    return emp ? `${emp.firstName} ${emp.lastName}` : null;
+  }, [isDriver, user?.employeeId]);
+
+  // Filter employees based on role
+  const displayEmployees = useMemo(() => {
+    if (isDriver && currentEmployeeName && EMPLOYEE_NAMES.includes(currentEmployeeName)) {
+      return [currentEmployeeName];
+    }
+    return EMPLOYEE_NAMES;
+  }, [isDriver, currentEmployeeName]);
+
   const handleCellClick = (employee: string, dayIndex: number) => {
+    if (isDriver) return; // drivers can't edit
     setSchedule((prev) => {
       const current = prev[employee][dayIndex];
       const currentIdx = CYCLE_OPTIONS.indexOf(current);
@@ -92,19 +113,33 @@ export function Scheduling() {
     });
   };
 
+  // Today's assignment for driver summary card
+  const todayDayIndex = useMemo(() => {
+    if (weekOffset !== 0) return -1;
+    const todayStr = format(today, 'yyyy-MM-dd');
+    return days.findIndex((d) => format(d, 'yyyy-MM-dd') === todayStr);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weekOffset]);
+
+  const todaySite = useMemo(() => {
+    if (!isDriver || !currentEmployeeName || todayDayIndex < 0) return null;
+    const grid = schedule[currentEmployeeName];
+    if (!grid) return null;
+    return grid[todayDayIndex];
+  }, [isDriver, currentEmployeeName, todayDayIndex, schedule]);
+
   // Stats
-  const scheduledEmployees = EMPLOYEES.filter((emp) =>
-    days.some((_, d) => schedule[emp][d] !== null),
+  const scheduledEmployees = displayEmployees.filter((emp) =>
+    days.some((_, d) => schedule[emp]?.[d] !== null),
   ).length;
 
   const activeSites = new Set(
-    EMPLOYEES.flatMap((emp) => days.map((_, d) => schedule[emp][d]).filter(Boolean)),
+    displayEmployees.flatMap((emp) => days.map((_, d) => schedule[emp]?.[d]).filter(Boolean)),
   ).size;
 
-  const gaps = EMPLOYEES.reduce((count, emp) => {
-    // Count weekday (Mon-Fri, indices 0-4) unassigned slots
+  const gaps = displayEmployees.reduce((count, emp) => {
     for (let d = 0; d < 5; d++) {
-      if (schedule[emp][d] === null) count++;
+      if (schedule[emp]?.[d] === null) count++;
     }
     return count;
   }, 0);
@@ -114,9 +149,13 @@ export function Scheduling() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-secondary-500">Dispatch Board</h2>
+          <h2 className="text-lg font-bold text-secondary-500">
+            {isDriver ? 'My Schedule' : 'Dispatch Board'}
+          </h2>
           <p className="text-sm text-gray-500">
-            Weekly scheduling &mdash; click any cell to cycle assignments
+            {isDriver
+              ? 'Your weekly assignments'
+              : 'Weekly scheduling \u2014 click any cell to cycle assignments'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -144,36 +183,55 @@ export function Scheduling() {
         </div>
       </div>
 
+      {/* Driver: Today summary card */}
+      {isDriver && weekOffset === 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-primary-50">
+              <Calendar className="w-5 h-5 text-primary-500" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 font-medium">Today&apos;s Assignment</p>
+              <p className="text-lg font-bold text-secondary-500">
+                {todaySite ? todaySite : 'Off'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-blue-50">
-            <Users className="w-5 h-5 text-blue-600" />
+      {!isDriver && (
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-blue-50">
+              <Users className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-secondary-500">{scheduledEmployees}</p>
+              <p className="text-xs text-gray-500">Employees Scheduled</p>
+            </div>
           </div>
-          <div>
-            <p className="text-2xl font-bold text-secondary-500">{scheduledEmployees}</p>
-            <p className="text-xs text-gray-500">Employees Scheduled</p>
+          <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-emerald-50">
+              <MapPin className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-secondary-500">{activeSites}</p>
+              <p className="text-xs text-gray-500">Job Sites Active</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-amber-50">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-secondary-500">{gaps}</p>
+              <p className="text-xs text-gray-500">Gaps (Weekday)</p>
+            </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-50">
-            <MapPin className="w-5 h-5 text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-secondary-500">{activeSites}</p>
-            <p className="text-xs text-gray-500">Job Sites Active</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-amber-50">
-            <AlertTriangle className="w-5 h-5 text-amber-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-secondary-500">{gaps}</p>
-            <p className="text-xs text-gray-500">Gaps (Weekday)</p>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Schedule Grid */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -215,7 +273,7 @@ export function Scheduling() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {EMPLOYEES.map((emp) => (
+              {displayEmployees.map((emp) => (
                 <tr key={emp} className="hover:bg-gray-50/50">
                   <td className="py-2.5 px-4">
                     <div className="flex items-center gap-2.5">
@@ -228,38 +286,62 @@ export function Scheduling() {
                     </div>
                   </td>
                   {days.map((_, dayIdx) => {
-                    const site = schedule[emp][dayIdx];
+                    const site = schedule[emp]?.[dayIdx] ?? null;
                     const isWeekend = dayIdx >= 5;
                     if (site === null) {
                       return (
                         <td key={dayIdx} className="py-2.5 px-1.5 text-center">
-                          <button
-                            onClick={() => handleCellClick(emp, dayIdx)}
-                            className={`w-full h-9 rounded-lg border border-dashed transition-colors ${
-                              isWeekend
-                                ? 'border-gray-100 bg-gray-50/50 hover:border-gray-300'
-                                : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
-                            }`}
-                            title="Click to assign"
-                          >
-                            <span className="text-[10px] text-gray-300">
-                              {isWeekend ? '' : 'OFF'}
-                            </span>
-                          </button>
+                          {isDriver ? (
+                            <div
+                              className={`w-full h-9 rounded-lg border border-dashed ${
+                                isWeekend
+                                  ? 'border-gray-100 bg-gray-50/50'
+                                  : 'border-gray-200 bg-gray-50'
+                              }`}
+                            >
+                              <span className="text-[10px] text-gray-300 leading-9">
+                                {isWeekend ? '' : 'OFF'}
+                              </span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleCellClick(emp, dayIdx)}
+                              className={`w-full h-9 rounded-lg border border-dashed transition-colors ${
+                                isWeekend
+                                  ? 'border-gray-100 bg-gray-50/50 hover:border-gray-300'
+                                  : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
+                              }`}
+                              title="Click to assign"
+                            >
+                              <span className="text-[10px] text-gray-300">
+                                {isWeekend ? '' : 'OFF'}
+                              </span>
+                            </button>
+                          )}
                         </td>
                       );
                     }
                     const colors = SITE_COLORS[site];
                     return (
                       <td key={dayIdx} className="py-2.5 px-1.5 text-center">
-                        <button
-                          onClick={() => handleCellClick(emp, dayIdx)}
-                          className={`w-full h-9 rounded-lg ${colors.bg} ${colors.text} flex items-center justify-center gap-1.5 text-xs font-semibold transition-all hover:ring-2 hover:ring-offset-1 hover:ring-gray-300`}
-                          title={`${site} — click to change`}
-                        >
-                          <span className={`w-2 h-2 rounded-full ${colors.dot} flex-shrink-0`} />
-                          {SITE_ABBREV[site]}
-                        </button>
+                        {isDriver ? (
+                          <div
+                            className={`w-full h-9 rounded-lg ${colors.bg} ${colors.text} flex items-center justify-center gap-1.5 text-xs font-semibold`}
+                            title={site}
+                          >
+                            <span className={`w-2 h-2 rounded-full ${colors.dot} flex-shrink-0`} />
+                            {SITE_ABBREV[site]}
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleCellClick(emp, dayIdx)}
+                            className={`w-full h-9 rounded-lg ${colors.bg} ${colors.text} flex items-center justify-center gap-1.5 text-xs font-semibold transition-all hover:ring-2 hover:ring-offset-1 hover:ring-gray-300`}
+                            title={`${site} \u2014 click to change`}
+                          >
+                            <span className={`w-2 h-2 rounded-full ${colors.dot} flex-shrink-0`} />
+                            {SITE_ABBREV[site]}
+                          </button>
+                        )}
                       </td>
                     );
                   })}
