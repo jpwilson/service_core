@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { HelpCircle, X, MessageSquare, BookOpen, ScrollText, Info, Search, ChevronDown, ChevronRight, Map, ExternalLink, Truck, Navigation } from 'lucide-react';
+import { HelpCircle, X, MessageSquare, BookOpen, ScrollText, Search } from 'lucide-react';
 import { ChatBot } from './ChatBot';
 import { GuidedTour } from './GuidedTour';
 import { useAppStore } from '../../store/useAppStore';
-import { useAuth } from '../../auth/AuthContext';
 
-type Tab = 'chat' | 'glossary' | 'changelog' | 'info';
+type Tab = 'chat' | 'glossary' | 'changelog';
 
 // ── Glossary Data ──────────────────────────────────────────────────────
 const GLOSSARY_TERMS = [
@@ -98,29 +97,6 @@ const CATEGORY_STYLES: Record<ChangelogCategory, string> = {
   Improvement: 'bg-purple-100 text-purple-700',
 };
 
-// ── Spec Requirements ──────────────────────────────────────────────────
-const SPEC_REQUIREMENTS = [
-  'Employee time tracking with clock in/out, breaks, and GPS verification',
-  'Payroll calculations with configurable overtime rules (daily/weekly thresholds)',
-  'Manager approval workflow for timesheets with anomaly flagging',
-  'Multi-format data import (Excel, CSV, PDF OCR, paper scan)',
-  'Analytics dashboards with hours, attendance, labor costs, and employee views',
-  'Route planning and crew scheduling for field service operations',
-];
-
-const LLM_MODELS = [
-  { name: 'Claude Sonnet 4', purpose: 'AI Help chatbot (domain-restricted)' },
-  { name: 'Claude Haiku 3.5', purpose: 'Anomaly detection scoring' },
-  { name: 'Claude Sonnet 4', purpose: 'Predictive overtime alerts' },
-];
-
-const INFRA_ITEMS = [
-  { label: 'Hosting', value: 'Vercel' },
-  { label: 'Backend', value: 'Supabase (Postgres + Auth + Edge Functions)' },
-  { label: 'AI Routing', value: 'OpenRouter' },
-  { label: 'Tracing', value: 'Langfuse' },
-];
-
 // ── Tab Components ─────────────────────────────────────────────────────
 
 function GlossaryTab() {
@@ -203,149 +179,12 @@ function ChangelogTab() {
   );
 }
 
-function InfoTab({ onStartTour }: { onStartTour: () => void }) {
-  const { user } = useAuth();
-  const isDriver = user?.role === 'driver';
-  const [specOpen, setSpecOpen] = useState(false);
-
-  if (isDriver) {
-    return (
-      <div className="flex flex-col h-full overflow-y-auto px-4 py-3 space-y-4 scrollbar-thin">
-        <div>
-          <h4 className="text-sm font-bold text-secondary-500 mb-3">Driver Portal</h4>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 bg-blue-50 rounded-lg p-3">
-              <Truck className="w-5 h-5 text-blue-600 flex-shrink-0" />
-              <div>
-                <p className="text-xs font-semibold text-blue-800">Assigned Equipment</p>
-                <p className="text-xs text-blue-600">View your assigned units in the Equipment tab</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 bg-green-50 rounded-lg p-3">
-              <Navigation className="w-5 h-5 text-green-600 flex-shrink-0" />
-              <div>
-                <p className="text-xs font-semibold text-green-800">Today&apos;s Route</p>
-                <p className="text-xs text-green-600">Check your pre-assigned route in Route Planning</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tour Button */}
-        <div className="pt-2">
-          <button
-            onClick={onStartTour}
-            className="w-full flex items-center justify-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition-colors"
-          >
-            <Map className="w-4 h-4" />
-            Take Guided Tour
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col h-full overflow-y-auto px-4 py-3 space-y-4 scrollbar-thin">
-      {/* Spec */}
-      <div>
-        <button
-          onClick={() => setSpecOpen(!specOpen)}
-          className="flex items-center gap-1.5 w-full text-left"
-        >
-          {specOpen ? (
-            <ChevronDown className="w-4 h-4 text-gray-400" />
-          ) : (
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-          )}
-          <span className="text-sm font-bold text-secondary-500">Spec Requirements</span>
-        </button>
-        {specOpen && (
-          <div className="mt-2 ml-6 space-y-1.5">
-            <p className="text-xs text-gray-500 leading-relaxed">
-              ServiceCore is a multi-platform employee time tracking and payroll dashboard
-              for portable sanitation / field service companies.
-            </p>
-            <ol className="list-decimal list-inside space-y-1 mt-2">
-              {SPEC_REQUIREMENTS.map((req, i) => (
-                <li key={i} className="text-xs text-gray-600 leading-relaxed">{req}</li>
-              ))}
-            </ol>
-          </div>
-        )}
-      </div>
-
-      {/* LLM Models */}
-      <div>
-        <h4 className="text-sm font-bold text-secondary-500 mb-1.5">LLM Models</h4>
-        <div className="space-y-1">
-          {LLM_MODELS.map((model, i) => (
-            <div key={i} className="flex items-baseline gap-2">
-              <span className="text-xs font-semibold text-gray-700">{model.name}</span>
-              <span className="text-[10px] text-gray-400">-</span>
-              <span className="text-xs text-gray-500">{model.purpose}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Infrastructure */}
-      <div>
-        <h4 className="text-sm font-bold text-secondary-500 mb-1.5">Infrastructure</h4>
-        <div className="space-y-1">
-          {INFRA_ITEMS.map((item, i) => (
-            <div key={i} className="flex items-baseline gap-2">
-              <span className="text-xs font-semibold text-gray-700">{item.label}:</span>
-              <span className="text-xs text-gray-500">{item.value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Links */}
-      <div>
-        <h4 className="text-sm font-bold text-secondary-500 mb-1.5">Links</h4>
-        <div className="space-y-1">
-          <a
-            href="https://github.com/jpwilson/service_core"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-primary-500 hover:text-primary-600 transition-colors"
-          >
-            <ExternalLink className="w-3 h-3" />
-            GitHub Repository
-          </a>
-          <a
-            href="/dashboard?tab=overview"
-            className="flex items-center gap-1.5 text-xs text-primary-500 hover:text-primary-600 transition-colors"
-          >
-            <ExternalLink className="w-3 h-3" />
-            Project Details
-          </a>
-        </div>
-      </div>
-
-      {/* Tour Button */}
-      <div className="pt-2">
-        <button
-          onClick={onStartTour}
-          className="w-full flex items-center justify-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition-colors"
-        >
-          <Map className="w-4 h-4" />
-          Take Guided Tour
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // ── Main Component ─────────────────────────────────────────────────────
 
 const TABS: { id: Tab; label: string; Icon: typeof MessageSquare }[] = [
   { id: 'chat', label: 'Chat', Icon: MessageSquare },
   { id: 'glossary', label: 'Glossary', Icon: BookOpen },
   { id: 'changelog', label: 'Changelog', Icon: ScrollText },
-  { id: 'info', label: 'Info', Icon: Info },
 ];
 
 export function HelpAgent() {
@@ -368,11 +207,6 @@ export function HelpAgent() {
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
-
-  const startTour = () => {
-    setIsOpen(false);
-    setShowGuidedTour(true);
-  };
 
   return (
     <>
@@ -422,7 +256,6 @@ export function HelpAgent() {
             {activeTab === 'chat' && <ChatBot />}
             {activeTab === 'glossary' && <GlossaryTab />}
             {activeTab === 'changelog' && <ChangelogTab />}
-            {activeTab === 'info' && <InfoTab onStartTour={startTour} />}
           </div>
         </div>
       )}

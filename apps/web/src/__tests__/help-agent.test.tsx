@@ -41,7 +41,7 @@ describe('HelpAgent', () => {
     expect(screen.getByText('ServiceCore Help')).toBeInTheDocument();
   });
 
-  it('has Chat, Glossary, Changelog, and Info tabs', async () => {
+  it('has Chat, Glossary, and Changelog tabs', async () => {
     const user = userEvent.setup();
     renderWithRouter(<HelpAgent />);
 
@@ -51,7 +51,6 @@ describe('HelpAgent', () => {
     expect(screen.getByText('Chat')).toBeInTheDocument();
     expect(screen.getByText('Glossary')).toBeInTheDocument();
     expect(screen.getByText('Changelog')).toBeInTheDocument();
-    expect(screen.getByText('Info')).toBeInTheDocument();
   });
 });
 
